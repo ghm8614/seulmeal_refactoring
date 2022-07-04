@@ -1,0 +1,555 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="shop.seulmeal.service.mapper.OperationMapper">
+	<resultMap type="post"	id="postSelectMap">
+		<id property="postNo" column="post_no" jdbcType="NUMERIC" />
+		<result property="title" column="title" jdbcType="VARCHAR" />
+		<result property="content" column="content" jdbcType="VARCHAR" />
+		<result property="shortContent" column="short_content" jdbcType="VARCHAR" />
+		<result property="views" column="views" jdbcType="NUMERIC" />
+		<result property="commentCount" column="comment_count" jdbcType="NUMERIC" />
+		<result property="likeCount" column="like_count" jdbcType="NUMERIC" />
+		<result property="thumnail" column="thumnail" jdbcType="VARCHAR" />
+		<result property="regDate" column="reg_date" jdbcType="DATE" />
+		<result property="updateDate" column="update_date" jdbcType="DATE" />
+		<result property="endDate" column="end_date" jdbcType="DATE" />
+		<result property="postStatus" column="post_status" jdbcType="VARCHAR" />
+		<result property="publicStatus" column="public_status" jdbcType="VARCHAR" />
+		<result property="password" column="password" jdbcType="NUMERIC" />
+		<result property="answerStatus" column="answer_status" jdbcType="VARCHAR" />
+		<result property="discount" column="discount" jdbcType="NUMERIC"/>
+		<result property="status" column="status" jdbcType="VARCHAR" />
+		<association property="user" javaType="user">
+			<result property="userId" column="user_id" jdbcType="VARCHAR" />
+		</association>
+		<association property="bpost" javaType="post">
+			<result property="postNo" column="b_post_no" jdbcType="NUMERIC"/>
+			<result property="title" column="b_title" jdbcType="VARCHAR"/>
+		</association>
+		<association property="npost" javaType="post">
+			<result property="postNo" column="n_post_no" jdbcType="NUMERIC"/>
+			<result property="title" column="n_title" jdbcType="VARCHAR"/>
+		</association>
+		<collection property="comments" ofType="comment">
+			<result property="commentNo" column="comment_no" jdbcType="NUMERIC" />
+			<result property="content" column="content_c" jdbcType="VARCHAR" />
+			<result property="layer" column="layer" jdbcType="CHAR" />
+			<result property="regDate" column="reg_date_c" jdbcType="DATE" />
+			<result property="updateDate" column="update_date" jdbcType="DATE" />
+			<result property="likeCount" column="like_count" jdbcType="NUMERIC" />
+			<result property="parentCommentNo" column="parent_comment_no" jdbcType="NUMERIC" />
+			<result property="status" column="status" jdbcType="VARCHAR" />
+			<association property="user" javaType="user">
+				<result property="userId" column="user_id_c" jdbcType="VARCHAR" />
+			</association>
+		</collection>
+		<collection property="discountProduct" ofType="product">
+			<result property="productNo" column="product_no" jdbcType="NUMERIC" />
+			<result property="foodCategory.foodCategoryNo" column="foodcategory_no" jdbcType="NUMERIC" />
+			<result property="name" column="name" jdbcType="VARCHAR" />
+			<result property="subContent" column="sub_content" jdbcType="VARCHAR" />
+			<result property="price" column="price" jdbcType="NUMERIC" />
+			<result property="originPrice" column="origin_price" jdbcType="NUMERIC" />
+			<result property="discount" column="discount" jdbcType="NUMERIC" />
+			<result property="calorie" column="calorie" jdbcType="NUMERIC" />
+			<result property="content" column="content" jdbcType="VARCHAR" />
+			<result property="stock" column="stock" jdbcType="NUMERIC" />
+			<result property="averageRating" column="average_rating" jdbcType="NUMERIC" />
+			<result property="likeCount" column="like_count" jdbcType="NUMERIC" />
+			<result property="reviewCount" column="review_count" jdbcType="NUMERIC" />
+			<result property="regDate" column="reg_date" jdbcType="DATE" />
+			<result property="status" column="status" jdbcType="NUMERIC" />
+			<result property="thumbnail" column="thumbnail" jdbcType="VARCHAR" />
+		</collection>
+	</resultMap>
+	
+	<resultMap type="comment"	id="commentSelectMap">		
+		<result property="commentNo" column="comment_no" jdbcType="NUMERIC" />
+		<result property="postNo" column="post_no" jdbcType="NUMERIC" />
+		<result property="content" column="content" jdbcType="VARCHAR" />
+		<result property="layer" column="layer" jdbcType="CHAR" />
+		<result property="regDate" column="reg_date" jdbcType="DATE" />
+		<result property="updateDate" column="update_date" jdbcType="DATE" />
+		<result property="likeCount" column="like_count" jdbcType="NUMERIC" />
+		<result property="parentCommentNo" column="parent_comment_no" jdbcType="NUMERIC" />
+		<result property="status" column="status" jdbcType="VARCHAR" />
+		<association property="user" javaType="user">
+			<result property="userId" column="user_id" jdbcType="VARCHAR" />
+		</association>
+	</resultMap>
+	
+	<insert id="insertOperation">
+		INSERT INTO post(post_no,user_id, title, content, short_content, thumnail, reg_date, update_date, end_date, post_status,public_status,password,discount)
+		values((seq_post_no.NEXTVAL),#{user.userId},#{title},#{content},#{shortContent:VARCHAR},#{thumnail:VARCHAR},SYSDATE,SYSDATE,
+		#{endDate:DATE},#{postStatus},#{publicStatus:VARCHAR},#{password:VARCHAR},#{discount:VARCHAR})
+		<selectKey keyProperty="postNo" resultType="int" order="AFTER">
+			SELECT seq_post_no.CURRVAL FROM DUAL
+		</selectKey>
+	</insert>
+	
+	<select id="getOperation" resultMap="postSelectMap">
+		<if test="postStatus == 1">
+			SELECT *
+				FROM(
+					SELECT
+						title, post_no, content, user_id, reg_date, views, post_status, status,
+						LAG(post_no) OVER (ORDER BY post_no) b_post_no,
+						LAG(title) OVER (ORDER BY post_no) b_title,
+						LEAD(post_no) OVER (ORDER BY post_no) n_post_no,
+						LEAD(title) OVER (ORDER BY post_no) n_title
+					FROM post
+					<where>
+						post_status = '1' AND status ='0'
+					</where>
+			ORDER BY post_no
+			)
+			<where>
+				post_no = #{postNo}
+			</where>
+		</if>
+		<if test="postStatus == 2">
+			SELECT * FROM post p, product pd
+			<where>
+				p.post_no=pd.post_no(+) AND
+				p.post_no = #{postNo}
+			</where>
+		</if>
+		<if test="postStatus == 3">
+			SELECT p.*,c.comment_no, c.content content_c, c.user_id user_id_c, c.reg_date reg_date_c FROM 
+			post p, comments c
+			<where>
+			p.post_no=c.post_no(+)
+			AND ((p.answer_status ='1' AND c.status=0) OR (p.answer_status ='0'))  AND p.status=0 AND p.post_no = #{postNo}
+			</where>
+			ORDER BY c.reg_date desc
+		</if>
+	</select>
+	
+	<update id="updateOperation">
+		UPDATE post
+		<set>
+			title = #{title:VARCHAR},
+			content = #{content:VARCHAR},
+			short_content = #{shortContent:VARCHAR},
+			thumnail = #{thumnail:VARCHAR},
+			public_status = #{publicStatus:VARCHAR},
+			password = #{password:VARCHAR},
+			update_date = SYSDATE,
+			discount = #{discount:VARCHAR},
+			end_date = #{endDate:DATE}
+		</set>
+		<where>
+			post_no = #{postNo}
+		</where>
+	</update>
+	
+	<update id="deleteOperation">
+		UPDATE post
+		<set>
+			status = 1
+		</set>
+		<where>
+			post_no = #{postNo}
+		</where>
+	</update>
+	
+	<!-- view 조회수 증가 -->
+	<update id="updateOperationView">
+		UPDATE post
+		<set>
+			views = views +1
+		</set>
+		<where>
+			post_no =#{postNo}
+		</where>
+	</update>
+	
+	<!-- 답변 완료 변경 -->
+	<update id="updateAnswerStatus">
+		UPDATE post
+		<set>
+			answer_status = 1
+		</set>
+		<where>
+			post_no=#{postNo}
+		</where>
+	</update>
+	
+	<!-- list -->
+	<select id="getListOperation" resultMap="postSelectMap" parameterType="map">
+		<if test="postStatus != 2">
+		SELECT *
+		FROM	(SELECT inner_table.*, ROWNUM AS row_seq
+				FROM	(SELECT * FROM post p
+							<where>
+								post_status = #{postStatus}
+								AND status = '0' 
+								<if test="search.searchCondition==0">
+									<if test="postStatus == 3">
+										AND answer_status = 0
+									</if>									
+								</if>
+								<if test="search.searchCondition==1">
+									<if test="postStatus == 3">
+										AND answer_status = 1
+									</if>
+								</if>
+								<if test="search.searchKeyword != null">
+									AND (title LIKE '%'||#{search.searchKeyword}||'%' OR content LIKE '%'||#{search.searchKeyword}||'%')
+								</if>
+							</where>							
+							ORDER BY reg_date desc)inner_table
+				WHERE ROWNUM &lt;= #{search.endRowNum})
+		WHERE row_seq BETWEEN #{search.startRowNum} AND #{search.endRowNum}
+		</if>
+		
+		<if test="postStatus == 2">
+			SELECT p.post_no, p.title, p.short_content, p.end_date, p.reg_date, p.views, p.thumnail, pd.name, pd.price, pd.product_no, p.discount
+			FROM post p, product pd
+			<where>
+				p.post_no=pd.post_no(+) AND
+				post_status = #{postStatus}				
+				<if test="search.searchCondition==0">
+					AND p.end_date &gt; SYSDATE AND p.status = '0'
+				</if>
+				<if test="search.searchCondition==1">
+					AND p.end_date &lt; SYSDATE AND p.status = '1'
+				</if>
+				<if test="search.searchKeyword !=null">
+					AND (p.title LIKE '%'||#{search.searchKeyword}||'%' OR p.content LIKE '%'||#{search.searchKeyword}||'%')
+				</if>
+			</where>
+			ORDER BY p.end_date desc, p.reg_date desc, p.status
+		</if>
+	</select>
+	
+	<!-- ROW Count -->
+	<select id="getTotalCount" resultType="int" parameterType="map">
+		SELECT COUNT(*)
+	  	FROM(	SELECT post_no FROM post
+  							<where>
+								post_status = #{postStatus}
+								AND status = '0' 
+								<if test="search.searchCondition==0">
+									<if test="postStatus == 2">
+										AND end_date &gt; SYSDATE
+									</if>
+									<if test="postStatus == 3">
+										AND answer_status = 0
+									</if>									
+								</if>
+								<if test="search.searchCondition==1">
+									<if test="postStatus == 2">
+										AND end_date &lt; SYSDATE
+									</if>
+									<if test="postStatus == 3">
+										AND answer_status = 1
+									</if>
+								</if>
+								<if test="search.searchKeyword != null">
+									AND (title LIKE '%'||#{search.searchKeyword}||'%' OR content LIKE '%'||#{search.searchKeyword}||'%')
+								</if>
+							</where> ) countTable
+	</select>
+	
+	<update id="endEvent">
+		UPDATE post
+		set
+			status =1
+		where end_date &lt; SYSDATE
+		<selectKey keyProperty="post_no" order="AFTER">
+		</selectKey>
+	</update>
+	
+	<!-- 오토 컴플릿 -->
+	<select id="getProductName" parameterType="map" resultType="map">
+		SELECT name
+		FROM product
+		<where>
+			name LIKE '%'|| #{value} || '%' AND status ='0' AND post_no is null
+		</where>
+	</select>
+	
+	<select id="getProduct" resultType="product">
+		SELECT * FROM product
+		<where>
+			name = #{value} AND status ='0' AND post_no is null
+		</where>
+	</select>
+	
+	<!-- 이벤트시 상품할인 -->
+	<update id="updateDiscountProduct">
+		<foreach collection="list" item="product" open="DECLARE BEGIN" close="; END;" separator=";">
+			UPDATE product
+			<set>
+				origin_price = price,
+				price = #{product.price},
+				post_no = #{postNo},
+				discount = #{product.discount}
+			</set>
+			<where>
+				product_no = #{product.productNo}
+			</where>
+		</foreach>		
+	</update>
+	
+	<!-- 이벤트 조기종료시 가격 원상복귀 -->
+	<update id="updateDiscountProductC">
+		<foreach collection="list" item="string" open="DECLARE BEGIN" close="; END;" separator=";">
+			UPDATE product
+			<set>
+				origin_price = null,
+				price = origin_price,
+				post_no = null,
+				discount = null
+			</set>
+			<where>
+				product_no = #{string}
+			</where>
+		</foreach>
+	</update>
+	
+	<!-- 이벤트 조기종료시 가격 원상복귀 -->
+	<update id="deleteDiscountProduct">
+		UPDATE product
+		<set>
+			origin_price = null,
+			price = origin_price,
+			post_no = null,
+			discount = null
+		</set>
+		<where>
+			post_no = #{postNo}
+		</where>
+	</update>
+	
+	<!-- 이벤트 종료시 상품가격 변경 -->
+	<update id="endDiscountProduct">
+		UPDATE product
+		<set>
+			origin_price = null,
+			price = origin_price,
+			post_no = null,
+			discount = null
+		</set>
+		<where>
+			post_no IN (
+			select post_no from post where end_date &lt; SYSDATE)
+		</where>
+	</update>
+	
+	<!-- 답변 -->
+	<insert id="insertAnswer">
+		INSERT INTO comments(comment_no,user_id,post_no,content,reg_date,update_date)
+		values((seq_comment_no.NEXTVAL),#{user.userId},#{postNo},#{content},SYSDATE,SYSDATE)
+		<selectKey keyProperty="commentNo" resultType="int" order="AFTER">
+			SELECT seq_comment_no.CURRVAL FROM DUAL
+		</selectKey>
+	</insert>
+	
+	<select id="getListAnswer" resultMap="commentSelectMap">
+		SELECT * FROM comments
+		<where>
+			post_no = #{postNo}
+			AND status = '0'
+		</where>
+	</select>
+	
+	<update id="updateAnswer">
+		UPDATE comments
+		<set>
+			content = #{content},
+			update_date = SYSDATE
+		</set>
+		<where>
+			comment_no = #{commentNo}
+		</where>
+	</update>
+	
+	<update id="deleteAnswer">
+		UPDATE comments
+		<set>
+			status ='1'
+		</set>
+		<where>
+			comment_no = #{commentNo}
+		</where>
+	</update>
+	
+	<!-- main -->
+	<select id="selectUserProduct" resultType="map">
+		SELECT DISTINCT THUMBNAIL, p.product_no , p.name, p.price, p.calorie, sub_content, p.origin_price, p.like_count, p.review_count, p.stock, p.status
+		FROM product p, foodcategory f, productparts pp
+		<where>
+			p.foodcategory_no = f.foodcategory_no(+) AND p.product_no = pp.product_no(+)
+			AND p.status = '0'
+			<if test="user.foodCategoryName1 != null">
+				AND (f.name = #{user.foodCategoryName1}
+			</if>
+			<if test="user.foodCategoryName2 != null">
+				OR f.name = #{user.foodCategoryName2}
+			</if>
+			<if test="user.foodCategoryName3 != null">
+				OR f.name = #{user.foodCategoryName3}
+			</if>
+			<if test="user.foodCategoryName1 !=null">
+				)
+			</if>
+			<if test="user.parts.size() !=0">
+				<foreach collection="user.parts" item="parts" open="AND (" separator=" AND " close=")">
+					pp.parts_no != #{parts.partsNo}
+				</foreach>
+			</if>
+		</where>
+		ORDER BY p.name DESC
+	</select>
+	
+	
+	<!-- admin page -->
+	<select id="userCount" resultType="map">
+		SELECT COUNT(*) as count,
+		TO_CHAR(TO_DATE(reg_date,'YYYY-MM-DD'), 'YYYY-MM') as MONTHLYDATA
+		FROM ${table}
+		<where>
+			reg_date &gt;= '2022-01-01' AND reg_date &lt; '2023-01-01'
+		</where>
+		GROUP BY TO_CHAR(TO_DATE(reg_date,'YYYY-MM-DD'), 'YYYY-MM')
+		ORDER BY MONTHLYDATA
+	</select>
+	
+	<select id="salePrice" resultType="map">
+		SELECT sum(price) as count,
+		TO_CHAR(TO_DATE(reg_date,'YYYY-MM-DD'), 'YYYY-MM') as MONTHLYDATA
+		FROM purchase
+		WHERE reg_date &gt;= '2022-01-01' AND reg_date &lt; '2023-01-01'
+		GROUP BY TO_CHAR(TO_DATE(reg_date,'YYYY-MM-DD'), 'YYYY-MM')
+		ORDER BY MONTHLYDATA
+	</select>
+	
+	<select id="countAdmin" resultType="map">
+		SELECT prod.productCount, pur.purchaseCount, event.eventCount, query.answerWaitCount, report.reportCount
+		FROM
+		(SELECT COUNT(*) productCount FROM product WHERE stock = 0 AND status = 0) prod,
+		(SELECT COUNT(*) purchaseCount FROM purchase WHERE purchase_status = 1) pur,
+		(SELECT COUNT(*) eventCount FROM post WHERE post_status=2 AND end_date &gt; SYSDATE AND status = '0') event,
+		(SELECT COUNT(*) answerWaitCount FROM post WHERE post_status =3 AND status=0 AND answer_status=0) query,
+		(SELECT COUNT(*) reportCount FROM report WHERE status=0) report
+	</select>
+	
+	<select id="countAdminDay" parameterType="map" resultType="map">
+		SELECT TO_CHAR(b.dt,'YY-MM-DD') as regDate, NVL(SUM(u.cnt),0) ucnt
+		FROM (SELECT TO_CHAR(reg_date, 'YY-MM-DD') AS regDate,
+		<choose>
+			<when test="option == 'price'">
+				SUM(price+usepoint) cnt
+			</when>
+			<otherwise>
+				COUNT(*) cnt
+			</otherwise>
+		</choose>		
+		FROM ${table}
+		WHERE (reg_date BETWEEN TO_DATE((SELECT TRUNC(ADD_MONTHS(SYSDATE,#{month}), 'MM') as first FROM dual),'YY-MM-DD') AND TO_DATE((SELECT LAST_DAY(TRUNC(ADD_MONTHS(SYSDATE,#{month}))) as rast from dual),'YY-MM-DD'))
+		<if test="table == 'purchase'">
+			AND purchase_status != 0
+		</if>
+		<if test="table == 'review'">
+			AND status = 0
+		</if>
+		<if test="post_status != null">
+			AND post_status = ${post_status}
+		</if>
+		GROUP BY reg_date) u,
+		
+		(SELECT TO_DATE((SELECT TRUNC(ADD_MONTHS(SYSDATE,#{month}), 'MM') as first FROM dual),'YY-MM-DD') + LEVEL - 1 AS dt
+		FROM dual
+		CONNECT BY LEVEL &lt;= (TO_DATE((SELECT LAST_DAY(TRUNC(ADD_MONTHS(SYSDATE,#{month}))) as rast from dual),'YY-MM-DD')
+		                - TO_DATE((SELECT TRUNC(ADD_MONTHS(SYSDATE,#{month}), 'MM') as first FROM dual),'YY-MM-DD')+1)) b
+		WHERE b.dt = u.regDate(+)
+		GROUP BY b.dt
+		ORDER BY b.dt
+	</select>
+	
+	<!-- 월별 통계 -->
+	<select id="monthChart" parameterType="map" resultType="map">
+		SELECT *
+		FROM (
+		<!-- SELECT -->
+		<if test="table =='post'">
+			SELECT like_count,post_no,reg_date,title
+		</if>
+		<if test=" table == 'post p,comments c'">
+			SELECT COUNT(*) COUNT,p.post_no,p.reg_date,p.title
+		</if>
+		<if test="table == 'product p, purchase pp, customproduct c'">
+			SELECT p.product_no,p.name, SUM(pp.price+pp.usepoint) cnt, COUNT(*) count			
+		</if>
+		FROM 
+		<!-- TABLE -->
+		${table}
+		<where>
+			<if test="table =='post'">
+				(reg_date BETWEEN TO_DATE((SELECT TRUNC( ADD_MONTHS(SYSDATE,#{month}), 'MM') as first FROM dual),'YY-MM-DD') AND TO_DATE((SELECT LAST_DAY(TRUNC( ADD_MONTHS(SYSDATE,#{month}) )) as rast from dual),'YY-MM-DD'))
+			</if>
+			<if test=" table == 'post p,comments c'">
+				(p.reg_date BETWEEN TO_DATE((SELECT TRUNC( ADD_MONTHS(SYSDATE,#{month}), 'MM') as first FROM dual),'YY-MM-DD') AND TO_DATE((SELECT LAST_DAY(TRUNC( ADD_MONTHS(SYSDATE,#{month}) )) as rast from dual),'YY-MM-DD')) AND p.post_no=c.post_no AND c.status=0
+			</if>
+			<if test="table == 'product p, purchase pp, customproduct c'">
+				(p.reg_date BETWEEN TO_DATE((SELECT TRUNC(ADD_MONTHS(SYSDATE,${month}), 'MM') as first FROM dual),'YY-MM-DD') AND TO_DATE((SELECT LAST_DAY(TRUNC(ADD_MONTHS(SYSDATE,${month}))) as rast from dual),'YY-MM-DD'))
+				AND p.product_no(+) = c.product_no AND c.purchase_no(+) = pp.purchase_no AND (c.purchase_no IS NOT NULL AND pp.purchase_status != 0)
+			</if>
+		</where>
+		<!-- GROUP BY -->
+		<if test=" table == 'post p,comments c'">
+			GROUP BY p.post_no,p.reg_date,p.title
+		</if>
+		<if test="table == 'product p, purchase pp, customproduct c'">
+			GROUP BY p.product_no,p.name
+		</if>
+		<!-- ORDER BY -->
+		<if test="option == 'post'">
+			ORDER BY like_count desc
+		</if>
+		<if test=" table == 'post p,comments c'">
+			ORDER BY COUNT(*) desc
+		</if>
+		<if test="table == 'product p, purchase pp, customproduct c'">
+			ORDER BY COUNT(*) desc
+		</if>
+		)
+		WHERE ROWNUM=1
+	</select>
+	
+	<select id="monthSaleParts" parameterType="map" resultType="map">
+		SELECT * FROM(
+		SELECT p.parts_no,p.name, COUNT(*) count
+		FROM parts p, purchase pp, customproduct c, customparts cp
+		WHERE (p.reg_date BETWEEN TO_DATE((SELECT TRUNC(ADD_MONTHS(SYSDATE,#{month}), 'MM') as first FROM dual),'YY-MM-DD') AND TO_DATE((SELECT LAST_DAY(TRUNC(ADD_MONTHS(SYSDATE,#{month}))) as rast from dual),'YY-MM-DD'))
+		AND p.parts_no = cp.parts_no(+) AND cp.customproduct_no = c.customproduct_no(+)  AND c.purchase_no = pp.purchase_no(+) AND (c.purchase_no IS NOT NULL AND pp.purchase_status != 0)
+		GROUP BY p.parts_no,p.name
+		ORDER BY COUNT(*) desc
+		) WHERE ROWNUM &lt; #{count}
+	</select>
+	
+	<select id="monthSaleProduct" parameterType="map" resultType="map">
+		SELECT * FROM(
+		SELECT p.product_no,p.name, SUM(p.price) cnt, COUNT(*) count		
+		<if test="option =='main'">
+			,p.thumbnail, p.price, p.calorie, p.sub_content, p.origin_price, p.like_count, p.review_count
+		</if>
+		FROM product p, purchase pp, customproduct c
+		WHERE (p.reg_date BETWEEN TO_DATE((SELECT TRUNC(ADD_MONTHS(SYSDATE,#{month}), 'MM') as first FROM dual),'YY-MM-DD') AND TO_DATE((SELECT LAST_DAY(TRUNC(ADD_MONTHS(SYSDATE,#{month}))) as rast from dual),'YY-MM-DD'))
+		AND p.product_no = c.product_no(+) AND c.purchase_no = pp.purchase_no(+) AND (c.purchase_no IS NOT NULL AND pp.purchase_status != 0)
+		<if test="option =='main'">
+			AND p.status = 0
+		</if>
+		GROUP BY p.product_no,p.name
+		<if test="option =='main'">
+			,p.thumbnail, p.price, p.calorie, p.sub_content, p.origin_price, p.like_count, p.review_count
+		</if>
+		ORDER BY cnt desc
+		) WHERE ROWNUM &lt; #{count} AND cnt IS NOT NULL
+	</select>
+</mapper>

@@ -1,0 +1,729 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+      "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="shop.seulmeal.service.mapper.CommunityMapper">
+
+
+   <!-- 1. Post -->
+   <resultMap type="shop.seulmeal.service.domain.Post"
+      id="postSelectMap">
+      <result property="postNo" column="post_no" jdbcType="NUMERIC" />
+      <result property="user.userId" column="user_id" jdbcType="VARCHAR" />
+      <result property="user.role" column="role" jdbcType="VARCHAR" />
+      <result property="user.nickName" column="nickname" jdbcType="VARCHAR" />
+      <result property="user.profileImage" column="profile_image" jdbcType="VARCHAR" />
+      <result property="user.profileMessage" column="profile_message" jdbcType="VARCHAR" />
+      <result property="title" column="title" jdbcType="NUMERIC" />
+      <result property="content" column="content" jdbcType="VARCHAR" />
+      <result property="shortContent" column="short_content" jdbcType="VARCHAR" />
+      <result property="views" column="views" jdbcType="NUMERIC" />
+      <result property="commentCount" column="comment_count" jdbcType="NUMERIC" />
+      <result property="likeCount" column="like_count" jdbcType="NUMERIC" />
+      <result property="thumnail" column="thumnail" jdbcType="VARCHAR" />
+      <result property="regDate" column="reg_date" jdbcType="DATE" />
+      <result property="updateDate" column="update_date" jdbcType="DATE" />
+      <result property="endDate" column="end_date" jdbcType="DATE" />
+      <result property="postStatus" column="post_status" jdbcType="CHAR" />
+      <result property="publicStatus" column="public_status" jdbcType="CHAR" />
+      <result property="password" column="password" jdbcType="NUMERIC" />
+      <result property="answerStatus" column="answer_status" jdbcType="CHAR" />
+      <result property="commentLevel" column="COMMENTLEVEL" jdbcType="NUMERIC" />
+      <result property="status" column="status" jdbcType="CHAR" />
+   </resultMap>
+   
+   
+
+   <insert id="insertPost" parameterType="Post">
+      INSERT INTO 
+         post(
+            post_no, 
+            user_id, 
+            title, 
+            content, 
+            reg_date,
+            post_status)
+      VALUES(
+         seq_post_no.nextval, 
+         #{user.userId}, 
+         #{title}, 
+         #{content}, 
+         SYSDATE, 
+         '0')
+      <selectKey keyProperty="postNo" resultType="int"
+         order="AFTER">
+         SELECT seq_post_no.CURRVAL FROM DUAL
+      </selectKey>
+   </insert>
+
+   <select id="getPost" parameterType="int" resultMap="postSelectMap">
+      SELECT p.*, u.nickname, u.profile_image
+          FROM post p, users u     
+         <where>
+            p.user_id = u.user_id
+            AND p.post_no = #{postNo}
+              AND p.post_status = '0'
+              AND p.status = '0'
+         </where>
+   </select>
+   
+   <select id="getPostAdmin" parameterType="int" resultMap="postSelectMap">
+      SELECT p.*, u.nickname, u.profile_image
+          FROM post p, users u     
+         <where>
+            p.user_id = u.user_id
+            AND p.post_no = #{postNo}
+              AND p.post_status = '0'
+         </where>
+   </select>
+
+   <!--  전체 게시글 목록 -->
+   <!--  '1' : 조회순, '2' : 베스트순, '3': 최신순--><!-- map : search / userId -->
+   <!--select id="getListPost" parameterType="map" resultMap="postSelectMap">
+      SELECT *
+      FROM   (SELECT inner_table.*, ROWNUM AS row_seq
+            FROM   (SELECT p.*, u.nickname, u.profile_image, u.profile_message, u.role
+                   FROM post p, users u     
+                       <where>
+                          p.user_id = u.user_id
+                          AND post_status = '0'
+                          AND status = '0'
+                          <if test="userId != null">
+                             AND p.user_id = #{userId}   
+                          </if>
+                          <if test="userId == null and search.searchKeyword != null">
+                             AND (title LIKE ('%'||#{search.searchKeyword}||'%') OR content LIKE ('%'||#{search.searchKeyword}||'%'))
+                          </if>   
+                       </where>
+                            
+                     ORDER BY
+                     <if test="search.searchCondition == null">
+                        p.reg_date
+                     </if>
+                     <if test="userId == null and search.searchCondition != null">
+                        <choose>
+                           <when test="search.searchCondition == 1">views</when>
+                           <when test="search.searchCondition == 2">like_count</when>
+                           <when test="search.searchCondition == 3">p.reg_date</when>
+                        </choose>
+                     </if>
+                      DESC )inner_table
+            WHERE ROWNUM &lt;= #{search.endRowNum})
+      WHERE row_seq BETWEEN #{search.startRowNum} AND #{search.endRowNum}
+   </select-->
+   
+   
+   <!--  차단유저 제외한 게시글 목록 -->
+   <select id="getListPostA" parameterType="map" resultMap="postSelectMap">
+      SELECT *
+      FROM   (SELECT inner_table.*, ROWNUM AS row_seq
+            FROM   (SELECT p.*, u.nickname, u.profile_image, u.profile_message, u.role
+                   FROM post p, users u     
+                       <where>
+                          p.user_id = u.user_id
+                          AND post_status = '0'
+                          AND status = '0'
+                          <if test="blockList != null">
+                                    <foreach item ="block" collection="blockList">
+                                        AND NOT p.user_id = #{block.relationUser.userId}
+                                    </foreach>
+                                </if>
+                          <if test="userId != null">
+                             AND p.user_id = #{userId}   
+                          </if>
+                          <if test="userId == null and search.searchKeyword != null">
+                             AND (title LIKE ('%'||#{search.searchKeyword}||'%') OR content LIKE ('%'||#{search.searchKeyword}||'%'))
+                          </if>   
+                       </where>
+                            
+                     ORDER BY
+                     <if test="search.searchCondition == null">
+                        p.reg_date
+                     </if>
+                     <if test="userId == null and search.searchCondition != null">
+                        <choose>
+                           <when test="search.searchCondition == 1">views</when>
+                           <when test="search.searchCondition == 2">like_count</when>
+                           <when test="search.searchCondition == 3">p.reg_date</when>
+                        </choose>
+                     </if>
+                      DESC )inner_table
+            WHERE ROWNUM &lt;= #{search.endRowNum})
+      WHERE row_seq BETWEEN #{search.startRowNum} AND #{search.endRowNum}
+   </select>
+   
+   <!-- 차단유저 제외 게시글 전체 수 -->
+   <select id="getPostTotalCountA" parameterType="map" resultType="int">
+      SELECT COUNT(*)
+        FROM(   SELECT p.*, u.nickname, u.profile_image, u.profile_message
+             FROM post p, users u     
+        <where>
+           p.user_id = u.user_id
+           AND post_status = '0'
+           AND status = '0'
+           <if test="blockList != null">
+                <foreach item ="block" collection="blockList">
+                    AND NOT p.user_id = #{block.relationUser.userId}
+                </foreach>
+            </if>
+           <if test="userId != null">
+            AND p.user_id = #{userId}   
+         </if>
+           <if test="userId == null and search.searchKeyword != null">
+              AND (title like ('%'||#{search.searchKeyword}||'%') OR content like ('%'||#{search.searchKeyword}||'%'))   
+           </if>
+        </where> ) countTable
+   </select>
+   
+   
+   <!-- 게시글 전체 수 -->
+   <select id="getPostTotalCount" parameterType="map" resultType="int">
+      SELECT COUNT(*)
+        FROM(   SELECT p.*, u.nickname, u.profile_image, u.profile_message
+             FROM post p, users u     
+        <where>
+           p.user_id = u.user_id
+           AND post_status = '0'
+           AND status = '0'
+           <if test="userId != null">
+            AND p.user_id = #{userId}   
+         </if>
+           <if test="userId == null and search.searchKeyword != null">
+              AND (title like ('%'||#{search.searchKeyword}||'%') OR content like ('%'||#{search.searchKeyword}||'%'))   
+           </if>
+        </where> ) countTable
+   </select>
+   
+   
+   <update id="updatePost" parameterType="Post">
+      UPDATE post
+      <set> 
+         title = #{title}, content = #{content}, update_date = SYSDATE
+      </set>
+      <where>
+         post_no = #{postNo}
+         AND post_status = '0'
+         AND status = '0'
+      </where>
+   </update>
+
+   <update id="deletePost" parameterType="int">
+      UPDATE post
+      <set> 
+         status = '1'
+      </set>
+      <where>
+         post_no = #{postNo}
+         AND post_status = '0'
+         AND status = '0'
+      </where>
+   </update>
+
+   <update id="deletePostAll">
+      UPDATE post
+      <set>
+         status = '1'
+      </set>
+      <where>
+         post_status = '0'
+         AND status = '0'
+      </where>
+   </update>
+
+   <update id="postViewsUp" parameterType="int">
+      UPDATE post
+      <set>
+         views = views + 1
+      </set>
+      <where>
+         post_no = #{postNo}
+         AND status = '0'
+      </where>
+      
+   </update>
+
+
+   <!-- 2. Comment -->
+   <resultMap type="shop.seulmeal.service.domain.Comment" id="commentSelectMap">
+      <result property="commentNo" column="comment_no" jdbcType="NUMERIC" />
+      <result property="user.userId" column="user_id" jdbcType="VARCHAR" />
+      <result property="user.role" column="role" jdbcType="VARCHAR" />
+      <result property="user.profileImage" column="profile_image" jdbcType="VARCHAR" />
+      <result property="user.nickName" column="nickname" jdbcType="VARCHAR" />
+      <result property="postNo" column="post_no" jdbcType="NUMERIC" />
+      <result property="content" column="content" jdbcType="VARCHAR" />
+      <result property="layer" column="layer" jdbcType="CHAR" />
+      <result property="regDate" column="reg_date" jdbcType="DATE" />
+      <result property="updateDate" column="update_date" jdbcType="DATE" />
+      <result property="likeCount" column="like_count" jdbcType="NUMERIC" />
+      <result property="parentCommentNo" column="parent_comment_no" jdbcType="INTEGER" />
+      <result property="status" column="status" jdbcType="CHAR" />
+   </resultMap>
+   
+   
+   <insert id="insertComment" parameterType="Comment">
+      INSERT INTO 
+         comments(comment_no, user_id, post_no, content, layer, reg_date, parent_comment_no, status)
+      VALUES 
+         (seq_comment_no.nextval, 
+         #{user.userId},
+         #{postNo}, 
+         #{content}, 
+         '0', 
+         SYSDATE, 
+         #{parentCommentNo:INTEGER}, 
+         '0')
+         <selectKey keyProperty="commentNo" resultType="int" order="AFTER">
+         SELECT seq_comment_no.CURRVAL FROM DUAL
+         </selectKey>
+   </insert>
+
+   <select id="getComment" parameterType="int" resultMap="commentSelectMap">
+      SELECT c.*, u.nickname, u.profile_image, u.role
+      FROM comments c, users u
+      <where>
+         c.user_id = u.user_id
+         AND comment_no = #{commentNo}
+         AND status = '0'
+      </where>
+   </select>
+
+   <update id="updateComment" parameterType="Comment">
+      UPDATE 
+         comments 
+      <set> 
+         content = #{content},
+         update_date = SYSDATE
+      </set>
+      <where>
+         comment_no = #{commentNo}
+         AND status = '0'
+      </where>
+   </update>
+
+   <update id="deleteComment" parameterType="int">
+      UPDATE 
+         comments 
+      <set>
+         status = '1'
+      </set>
+      <where> 
+         comment_no = #{commentNo}
+         AND status = '0'
+      </where>
+   </update>
+
+
+   <!--  select id="getListComment" parameterType="int" resultMap="commentSelectMap">
+      SELECT 
+         comment_no, user_id, nickname, content, layer, reg_date, 
+         update_date, like_count, parent_comment_no, status
+      FROM comments
+      <where>
+         post_no = #{postNo}
+         AND status = '0'
+      </where>
+   </select-->
+   
+   <!-- SQL : SELECT LIST -->
+   <!-- 
+   <select  id="getListComment"  parameterType="map"   resultMap="commentSelectMap">
+        SELECT *
+        FROM (   SELECT inner_table.* , ROWNUM AS row_seq
+                    FROM      (   
+                       SELECT c.*, u.nickname, u.profile_image, u.role
+                     FROM comments c, users u
+                     <where>
+                        c.user_id = u.user_id
+                        AND post_no = #{postNo}
+                        AND status = '0'
+                     </where>            
+                     ORDER BY c.reg_date DESC) inner_table
+                  WHERE ROWNUM &lt;= #{search.endRowNum} )
+      WHERE row_seq BETWEEN #{search.startRowNum} AND #{search.endRowNum} 
+    </select> -->
+    
+    <select  id="getListComment"  parameterType="map"   resultMap="commentSelectMap">
+        SELECT *
+        FROM (   SELECT inner_table.* , ROWNUM AS row_seq
+                    FROM      ( 
+                    SELECT LEVEL COMMENTLEVEL, c.*, u.nickname, u.profile_image, u.role
+                    FROM
+                        (
+                        SELECT * FROM comments c WHERE post_no = #{postNo}
+                        AND status = 0
+                        ORDER BY c.reg_date DESC
+                        ) c, users u
+                        WHERE c.user_id = u.user_id
+                    START WITH parent_comment_no is NULL
+                    CONNECT BY PRIOR comment_no =parent_comment_no
+                            ) inner_table
+                  WHERE ROWNUM &lt;= #{search.endRowNum} )
+      WHERE row_seq BETWEEN #{search.startRowNum} AND #{search.endRowNum} 
+    </select>
+   
+
+   <select id="getCommentTotalCount" parameterType="int" resultType="int">
+      SELECT COUNT(*)
+      FROM comments
+      <where>
+         post_no = #{postNo}
+         AND status = '0'
+      </where>
+   </select>
+   
+   <update id="postCommentCountUp" parameterType="int">
+      UPDATE post
+      <set>
+         comment_count = comment_count + 1
+      </set>
+      <where>
+         post_no = #{postNo}
+      </where>
+   </update>
+   
+   <update id="postCommentCountDown" parameterType="int">
+      UPDATE post
+      <set>
+         comment_count = comment_count - 1
+      </set>
+      <where>
+         post_no = #{postNo}
+      </where>
+   </update>   
+
+
+   <!-- 3. Report -->
+   <resultMap type="shop.seulmeal.service.domain.Report" id="reportSelectMap">
+      <result property="reportNo" column="report_no" jdbcType="NUMERIC" />
+      <result property="postNo" column="post_no" jdbcType="NUMERIC" />
+      <result property="reporterId" column="reporter_id" jdbcType="VARCHAR" />
+      <result property="reason" column="reason" jdbcType="VARCHAR" />
+      <result property="regDate" column="reg_date" jdbcType="DATE" />
+      <result property="status" column="status" jdbcType="CHAR" />
+   </resultMap>   
+   
+   <insert id="insertReportPost" parameterType="Report">
+      INSERT INTO 
+            report(
+                report_no, 
+                post_no, 
+                reporter_id, 
+                reason,
+                reg_date,
+                status        
+            )
+        VALUES(
+            seq_report_no.nextval,
+            #{postNo},
+            #{reporterId},
+            #{reason},
+            SYSDATE,
+            '0')
+   </insert>
+   
+   <update id="deleteReportPost" parameterType="int">
+      UPDATE 
+            report
+        SET 
+            status = '1'
+        WHERE status = '0'
+        AND post_no = #{postNo}
+   </update>
+   
+   <!-- SQL : SELECT LIST -->
+   <select  id="getListReportPost"  parameterType="shop.seulmeal.common.Search"   resultMap="reportSelectMap">
+        SELECT *
+        FROM (   SELECT inner_table.* , ROWNUM AS row_seq
+                    FROM      (   
+                       SELECT report_no, post_no, reporter_id, reason, reg_date, status
+                       FROM report
+                       ORDER BY reg_date DESC
+                        ) inner_table
+                  WHERE ROWNUM &lt;= #{endRowNum} )
+      WHERE row_seq BETWEEN #{startRowNum} AND #{endRowNum} 
+    </select>
+   
+   <select id="getReportTotalCount" resultType="int">
+      SELECT COUNT(*)
+      FROM report
+   </select>
+      
+      
+   <delete id="deleteReportPostAll">
+      DELETE FROM report
+   </delete>
+
+
+
+   <!-- 4. Like -->
+   
+   <!-- 좋아요 체크 X-->
+   
+   <resultMap type="shop.seulmeal.service.domain.Like" id="likeSelectMap">
+      <result property="likeNo" column="like_no" jdbcType="NUMERIC" />
+      <result property="postNo" column="post_no" jdbcType="NUMERIC" />
+      <result property="userId" column="user_id" jdbcType="VARCHAR" />
+      <result property="commentNo" column="comment_no" jdbcType="VARCHAR" />
+      <result property="productNo" column="product_no" jdbcType="DATE" />
+   </resultMap>   
+   
+   
+   <select id="checkLike" parameterType="Like" resultMap="likeSelectMap">
+      SELECT * FROM likes
+      <where>
+         user_id = #{userId}
+         AND post_no = #{postNo}
+      </where>
+   </select>
+
+   <select id="checkLikePost" parameterType="String" resultMap="likeSelectMap">
+      SELECT post_no  
+      FROM likes
+      <where>
+         user_id = #{userId}
+      </where>
+   </select>
+
+
+   <!-- 좋아요 -->
+   <insert id="insertLike" parameterType="Like">
+      INSERT INTO
+         likes(like_no, user_id, post_no, comment_no, product_no)
+      VALUES
+         (seq_like_no.nextval, #{userId}, #{postNo:INTEGER}, #{commentNo:INTEGER}, #{productNo:INTEGER})
+   </insert>
+   
+   <!-- 게시글 좋아요 +1 -->
+   <update id="postLikeCountUp" parameterType="int">
+      UPDATE post
+      <set>
+         like_count = like_count + 1
+      </set>
+      <where>
+         post_no = #{postNo}
+      </where>
+   </update>
+   
+   
+   
+   <!-- 좋아요 취소 -->
+   <delete id="deleteLike" parameterType="Like">
+      DELETE FROM 
+         likes
+      <where> 
+         user_id = #{userId}
+         AND post_no = #{postNo}
+      </where> 
+   </delete>
+   
+   <!-- 게시글 좋아요 -1 -->
+   <update id="postLikeCountDown" parameterType="int">
+      UPDATE post
+      <set>
+         like_count = like_count - 1
+      </set>   
+      <where>
+         post_no = #{postNo}
+      </where> 
+   </update>
+
+   <!-- 게시글 좋아요 수 조회 -->
+   <select id="getPostLikeCount" parameterType="int" resultType="int">
+      SELECT like_count
+      FROM post
+      <where>
+         post_no = #{postNo}
+         AND post_status = '0'
+         AND status = '0'         
+      </where>
+   </select>
+
+
+
+
+   <!-- 5. Follow -->
+   
+   <resultMap type="Relation" id="relationSelectMap">
+      <result property="relationNo" column="relation_no" jdbcType="NUMERIC" />
+      <result property="userId" column="user_id" jdbcType="VARCHAR" />
+      <result property="relationUser.role" column="role" jdbcType="VARCHAR" />
+      <result property="relationUser.userId" column="relation_user_id" jdbcType="VARCHAR" />
+      <result property="relationUser.nickName" column="nickname" jdbcType="VARCHAR" />
+      <result property="relationUser.profileImage" column="profile_image" jdbcType="VARCHAR" />
+      <result property="relationUser.profileMessage" column="profile_message" jdbcType="VARCHAR" />
+      <result property="relationStatus" column="relation_status" jdbcType="VARCHAR" />
+      <result property="regDate" column="reg_date" jdbcType="DATE" />
+   </resultMap>
+   
+   <resultMap type="Relation" id="relationSelectMap2">
+      <result property="relationNo" column="relation_no" jdbcType="NUMERIC" />
+      <result property="userId" column="user_id" jdbcType="VARCHAR" />
+      <result property="relationUser.userId" column="relation_user_id" jdbcType="VARCHAR" />
+      <result property="regDate" column="reg_date" jdbcType="DATE" />
+      <result property="relationStatus" column="relation_status" jdbcType="VARCHAR" />
+   </resultMap>
+
+
+   <insert id="insertRelation" parameterType="Relation">
+      INSERT INTO 
+         relation(relation_no, user_id, relation_user_id, reg_date, relation_status)
+      VALUES
+         (seq_relation_no.nextval, #{userId}, #{relationUser.userId}, SYSDATE, #{relationStatus})
+         <selectKey keyProperty="relationNo" resultType="int" order="AFTER">
+         SELECT seq_relation_no.CURRVAL FROM DUAL
+         </selectKey>
+   </insert>
+   
+   <select id="getListRelation" parameterType="map" resultMap="relationSelectMap">
+      SELECT *
+      FROM   (SELECT inner_table.*, ROWNUM AS row_seq
+            FROM   (SELECT r.*, u.nickname, u.profile_image,u.profile_message, u.role
+                   FROM relation r, users u
+                       <where>
+                        r.relation_user_id = u.user_id
+                        AND r.user_id = #{userId}
+                        AND r.relation_status = #{relationStatus}
+                        <if test="search != null and search.searchKeyword != null">
+                           AND r.relation_user_id LIKE ('%'||#{search.searchKeyword}||'%')                        
+                        </if>
+                     </where>                     
+                     ORDER BY r.reg_date )inner_table
+                     <if test="search == null">)</if>
+            <if test="search != null">
+            WHERE ROWNUM &lt;= #{search.endRowNum})
+      WHERE row_seq BETWEEN #{search.startRowNum} AND #{search.endRowNum}</if>   
+   </select>
+   
+
+   
+   <!-- relation 총 개수 -->
+   <!-- map : 1.userId 2.search 3.relationStatus -->
+   <select id="getRelationTotalCount" parameterType="map" resultType="int" >
+      SELECT COUNT(*)
+        FROM(   SELECT r.* FROM relation r, users u
+                       <where>
+                        r.relation_user_id = u.user_id
+                        AND r.user_id = #{userId}
+                        AND r.relation_status = #{relationStatus}
+                        <if test="search != null and search.searchKeyword != null">
+                           AND r.relation_user_id LIKE ('%'||#{search.searchKeyword}||'%')                        
+                        </if>
+                     </where> ) countTable
+   </select>
+   
+   
+   <update id="updateRelation" parameterType="Relation">
+      UPDATE 
+            relation
+        <set> 
+           relation_status = '1'
+        </set>
+        <where>
+         relation_status = '0'
+         AND relation_no = #{relationNo}
+        </where>
+   </update>
+
+
+   <delete id="deleteRelation" parameterType="Relation">
+      DELETE FROM 
+         relation
+      <where>
+         relation_status = #{relationStatus}
+         AND relation_no = #{relationNo}
+      </where>
+   </delete>
+
+   <delete id="deleteRelationAll" >
+      DELETE FROM relation
+   </delete>
+
+
+   <!-- relation -->
+   <select id="getRelation" parameterType="Relation" resultMap="relationSelectMap2">
+      SELECT * FROM relation
+            <where>
+               user_id = #{userId}
+               AND relation_user_id = #{relationUser.userId}  
+            </where>                     
+   </select>
+
+
+
+   <!-- relation 리스트
+   <select id="getListRelation" parameterType="Relation">
+      SELECT * FROM relation
+            <where>
+               user_id = #{userId}
+               AND relation_user_id = #{relationUserId}  
+            </where>                     
+   </select-->
+
+
+   <!--  팔로워 유저 list -->
+   <select id="getListFollower" parameterType="map" resultMap="relationSelectMap">
+      SELECT *
+      FROM   (SELECT inner_table.*, ROWNUM AS row_seq
+            FROM   (SELECT r.*, u.nickname, u.profile_image,u.profile_message, u.role
+                        FROM relation r, users u 
+                        <where> 
+                           r.user_id = u.user_id 
+                           AND r.relation_user_id = #{relationUserId}
+                           AND r.relation_status = '0'
+                           <if test = "search != null and search.searchKeyword != null">
+                              AND r.user_id LIKE ('%'||#{search.searchKeyword}||'%')
+                           </if>
+                        </where>                     
+                        ORDER BY r.reg_date )inner_table 
+                        <if test="search == null">)</if>
+                        <if test="search != null">
+            WHERE ROWNUM &lt;= #{search.endRowNum})
+      WHERE row_seq BETWEEN #{search.startRowNum} AND #{search.endRowNum}</if>   
+   </select>
+   
+   
+   <select id="getFollowerTotalCount"  parameterType="map" resultType="int">
+      SELECT COUNT(*)
+      FROM(   SELECT * FROM relation r, users u 
+                  <where> 
+                     r.relation_user_id = u.user_id 
+                     AND r.relation_user_id = #{relationUserId}
+                     AND r.relation_status = '0'
+                     <if test = "search != null and search.searchKeyword != null">
+                        AND r.user_id LIKE ('%'||#{search.searchKeyword}||'%')
+                     </if>
+                  </where>) countTable
+   </select>
+
+   <select id="getAllRelation" parameterType="string" resultMap="relationSelectMap2">
+      SELECT * FROM relation 
+         <where>
+            NOT relation_status IN ('2')
+            AND user_id = #{userId} 
+         </where>
+   </select>
+
+   <select id="checkReport" resultType="int">
+      SELECT count(report_no)
+      FROM report
+      <where>
+         post_no = #{postNo}
+         AND reporter_id = #{reporterId}
+      </where>
+   </select>
+
+   <select id="checkRelation" parameterType="Relation" resultType="string">
+      SELECT relation_status 
+      FROM relation  
+      <where>
+         user_id = #{userId}
+         AND relation_user_id = #{relationUser.userId}
+      </where>
+   </select>
+
+
+
+</mapper>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="shop.seulmeal.service.mapper.AttachmentsMapper">
+	
+	<insert id="insertAttachments">
+		INSERT INTO attachments(attachments_no, product_no, review_no, post_no, comment_no, attachment_name, reg_date)
+		VALUES((seq_attachments_no.NEXTVAL), #{productNo:INTEGER}, #{reviewNo:INTEGER}, #{postNo:INTEGER},#{commentNo:INTEGER}, #{attachmentName},SYSDATE)
+	</insert>
+	
+	<delete id="deleteAttachments">
+		DELETE FROM attachments
+		<where>
+			attachments_no = #{attachmentNo}
+		</where>
+	</delete>
+	
+	<insert id="insertListAttachments" parameterType="map">
+		INSERT INTO attachments(attachments_no, product_no, review_no, post_no, comment_no, attachment_name, reg_date)
+		SELECT seq_attachments_no.NEXTVAL, A.* FROM(
+			<foreach collection="list" item="attachments" separator="UNION ALL">
+				SELECT #{attachments.productNo:INTEGER} as product_no,
+					#{attachments.reviewNo:INTEGER} as review_no,
+					#{attachments.postNo:INTEGER} as post_no,
+					#{attachments.commentNo:INTEGER} as comment_no,
+					#{attachments.attachmentName} as attachment_name,
+					SYSDATE as reg_date
+					from dual
+			</foreach>
+		) A
+	</insert>
+	
+	<!-- list -->
+	<select id="getListAttachments" resultType="attachments" parameterType="map">
+		SELECT * FROM attachments
+		<where>
+			<choose>
+				<when test="productNo !=null">
+					product_no = #{productNo}
+				</when>
+				<when test="reviewNo !=null">
+					review_no = #{reviewNo}
+				</when>
+				<when test="postNo !=null">
+					post_no = #{postNo}
+				</when>
+				<when test="commentNo !=null">
+					comment_no = #{commentNo}
+				</when>
+			</choose>
+		</where>
+	</select>
+	
+</mapper>

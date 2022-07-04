@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+           "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+
+<mapper namespace="shop.seulmeal.service.mapper.PurchaseMapper"> 
+	
+	<resultMap id="minusPartsSelectMap" type="customParts">
+		<result property="customPartsNo" 		column="customparts_no"    jdbcType="NUMERIC"/>
+		<result property="customProductNo" 		column="customproduct_no"  jdbcType="NUMERIC"/> 
+		<result property="minusNo" 		column="productparts_no"   jdbcType="NUMERIC"/>
+		<result property="minusName" 			column="minus_name" 	   jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	<resultMap id="plusPartsSelectMap" type="customParts">
+		<result property="customPartsNo" 		column="customparts_no"   jdbcType="NUMERIC"/>
+		<result property="gram" 		column="gram"   jdbcType="NUMERIC"/>
+		<association property="parts" javaType="parts" >
+			<result property="partsNo" 			column="parts_no" 		  jdbcType="NUMERIC"/>
+			<result property="name" 			column="name" 			  jdbcType="VARCHAR"/>
+			<result property="price" 			column="price" 	  		  jdbcType="NUMERIC"/>
+			<result property="calorie" 			column="calorie" 	 	  jdbcType="NUMERIC"/>
+		</association>
+	</resultMap>
+	
+	<resultMap id="customPartsSelectMap" type="customParts">
+		<result property="customProductNo" 		column="customproduct_no" jdbcType="NUMERIC"/> 
+		<association property="parts" javaType="parts" >
+			<result property="partsNo" 			column="parts_no" 		  jdbcType="NUMERIC"/>
+			<result property="name" 			column="name" 			  jdbcType="VARCHAR"/>
+			<result property="price" 			column="price" 	  		  jdbcType="NUMERIC"/>
+			<result property="calorie" 			column="calorie" 	 	  jdbcType="NUMERIC"/>
+		</association>
+	</resultMap>
+	
+	<resultMap id="customProductSelectMap" type="customProduct">
+    	<result property="customProductNo" 		column="customproduct_no" 	jdbcType="NUMERIC"/>
+		<result property="count" 				column="count" 				jdbcType="NUMERIC"/>
+		<result property="cartStatus" 			column="cart_status" 		jdbcType="CHAR"/>
+		<result property="regDate" 				column="reg_date" 			jdbcType="DATE"/>
+		<result property="purchaseNo" 			column="purchase_no" 		jdbcType="NUMERIC"/>
+		<result property="price" 				column="price" 				jdbcType="NUMERIC"/>
+		<association property="user" javaType="user" >
+			<result property="userId" 	 		column="user_id" 			jdbcType="VARCHAR"/>
+		</association>
+		<association property="product" javaType="product" >
+			<result property="productNo" 		column="product_no" 		jdbcType="NUMERIC"/>
+			<result property="name" 			column="name" 				jdbcType="VARCHAR"/>
+			<result property="thumbnail" 		column="thumbnail" 			jdbcType="VARCHAR"/>
+			<result property="price" 			column="product_price" 		jdbcType="NUMERIC"/>
+			<result property="calorie" 			column="calorie" 			jdbcType="NUMERIC"/>
+			<result property="stock" 			column="stock" 			jdbcType="NUMERIC"/>
+		</association>
+		<collection property="minusParts" column="customproduct_no" javaType="java.util.ArrayList" 
+			ofType="parts" select="getListMinusParts">
+		</collection>	 
+		<collection property="plusParts" column="customproduct_no" javaType="java.util.ArrayList" 
+					ofType="parts" select="getListPlusParts">
+		</collection> 
+	</resultMap>
+	
+	<resultMap id="purchaseSelectMap" type="purchase">
+		<result property="purchaseNo" 			column="purchase_no" 		jdbcType="NUMERIC"/> 
+		<result property="price" 				column="price"		 		jdbcType="NUMERIC"/> 
+		<result property="address" 				column="address" 			jdbcType="VARCHAR"/> 
+		<result property="name" 				column="name" 				jdbcType="VARCHAR"/> 
+		<result property="phone" 				column="phone" 				jdbcType="VARCHAR"/> 
+		<result property="message" 				column="message" 			jdbcType="VARCHAR"/> 
+		<result property="purchaseStatus" 		column="purchase_status" 	jdbcType="VARCHAR"/> 
+		<result property="status" 				column="status" 			jdbcType="VARCHAR"/> 
+		<result property="regDate" 				column="reg_date" 			jdbcType="DATE"/> 
+		<result property="paymentCondition" 	column="payment_condition" 	jdbcType="VARCHAR"/> 
+		<result property="imp_uid" 				column="imp_uid" 			jdbcType="VARCHAR"/> 
+		<result property="amount" 				column="amount" 			jdbcType="NUMERIC"/> 
+		<result property="email" 				column="email" 				jdbcType="VARCHAR"/>
+		<result property="usePoint" 			column="usepoint" 			jdbcType="VARCHAR"/>
+		<association property="user" javaType="user" >
+			<result property="userId" 			column="user_id" 			jdbcType="VARCHAR"/>
+			<result property="userName" 		column="user_name" 			jdbcType="VARCHAR"/>
+			<result property="phone" 			column="phone" 				jdbcType="VARCHAR"/>
+			<result property="role" 			column="role" 				jdbcType="VARCHAR"/>
+		</association>
+		<collection property="customProduct" column="purchase_no" javaType="java.util.ArrayList" 
+					ofType="customProduct" select="getListCustomProductByPurchaseNo">
+		</collection>
+	</resultMap>
+	
+	<!-- autocomplete -->
+	<select id="autocomplete" parameterType="map" resultType="map">
+		SELECT name
+		FROM parts
+		WHERE name LIKE  '%'|| #{value} || '%'
+	</select>
+	
+
+	<!-- custom_parts -->
+	<insert id="insertMinusParts" parameterType="map">
+		INSERT INTO customparts(customparts_no, productparts_no, minus_name, customproduct_no)
+		SELECT seq_customparts_no.NEXTVAL, inner_table.*
+		FROM(
+			<foreach collection="minusParts" item="item" separator="union all">
+				SELECT
+				#{item.minusNo:NUMERIC} as productparts_no,
+				#{item.minusName:VARCHAR} as minus_name,
+				#{item.customProductNo:NUMERIC} as customproduct_no
+				FROM dual
+			</foreach>
+			)inner_table
+	</insert>
+
+	<insert id="insertPlusParts" parameterType="map">
+		INSERT INTO customparts(customparts_no, parts_no, gram, customproduct_no)
+		SELECT seq_customparts_no.NEXTVAL, inner.*
+		FROM(
+			<foreach collection="plusParts" item="item" index="index" separator="union all">
+				SELECT
+				#{item.parts.partsNo:NUMERIC} as parts_no,
+				#{item.gram:NUMERIC} as gram,
+				#{item.customProductNo:NUMERIC} as customproduct_no
+				FROM dual
+			</foreach>
+			)inner
+	</insert>
+
+	<select id="getCustomParts" resultType="customParts">
+		SELECT * FROM customparts
+		<where>
+			customparts_no = #{customPartsNo}
+		</where>
+	</select>
+ 
+	<select id="getListMinusParts" resultMap="minusPartsSelectMap" parameterType="int">
+		SELECT  customparts_no, customproduct_no, productparts_no, minus_name
+		FROM customparts
+		WHERE customproduct_no=#{customProductNo} AND productparts_no IS NOT NULL
+		ORDER BY customparts_no
+	</select>
+	
+	<select id="getListPlusParts" resultMap="plusPartsSelectMap" parameterType="int">
+		SELECT c.customparts_no, c.customproduct_no, c.parts_no, p.name, p.price, p.calorie, c.gram
+		FROM customparts c, parts p
+		WHERE c.parts_no=p.parts_no AND c.customproduct_no=#{customProductNo} 
+		ORDER BY c.customparts_no
+	</select>
+
+	<select id="getListCustomParts" resultMap="customPartsSelectMap" parameterType="int">
+		SELECT customproduct_no
+		FROM customparts
+		WHERE customproduct_no=#{customProductNo}
+		ORDER BY customparts_no
+	</select>
+	
+	<delete id="deleteCustomParts" parameterType="int">
+        DELETE FROM customparts WHERE customproduct_no = #{customProductNo}
+    </delete>
+
+
+	<!-- custom_product -->
+	<insert id="insertCustomProduct">
+		INSERT INTO customproduct
+		(customproduct_no, user_id, product_no, count, price, cart_status, reg_date)
+		values((seq_customproduct_no.NEXTVAL),#{user.userId:VARCHAR}, #{product.productNo:NUMERIC}, 
+		#{count:NUMERIC}, #{price:NUMERIC}, #{cartStatus:CHAR}, SYSDATE)
+		<selectKey keyProperty="customProductNo" resultType="int" order="AFTER">
+			SELECT seq_customproduct_no.CURRVAL FROM DUAL
+		</selectKey>
+	</insert>
+	
+	<!--커스터마이징옵션 수정페이지에서 출력 -->
+	<select id="getCustomProduct" resultMap="customProductSelectMap" parameterType="int">
+		SELECT c.customproduct_no, c.count, c.price, p.product_no, p.name, p.price product_price, p.thumbnail, p.stock
+		FROM customproduct c, product p
+		<where>
+			c.product_no=p.product_no AND customproduct_no = #{customProductNo}
+		</where>
+	</select>
+	
+	<!-- 장바구니리스트 -->
+	<select id="getListCustomProduct" resultMap="customProductSelectMap" parameterType="map">
+		SELECT *
+		FROM (SELECT vt.*, ROWNUM AS row_seq
+			FROM (SELECT cpd.customproduct_no, cpd.count, pd.product_no, pd.name, pd.thumbnail, cpd.price, pd.calorie
+			    FROM customproduct cpd, product pd
+				WHERE cpd.product_no=pd.product_no AND cpd.user_id=#{userId} AND cpd.cart_status='1'
+				ORDER BY cpd.customproduct_no) vt
+			WHERE ROWNUM &lt; = #{search.endRowNum})
+		WHERE row_seq BETWEEN #{search.startRowNum} AND #{search.endRowNum}
+	</select>
+	
+	<!-- 구매내역리스트에서 -->
+	<select id="getListCustomProductByPurchaseNo" resultMap="customProductSelectMap" parameterType="map">
+		SELECT cpd.customproduct_no, cpd.count, pd.product_no, pd.name, pd.thumbnail, cpd.price, pd.calorie, pd.stock
+		FROM customproduct cpd, product pd
+		WHERE cpd.product_no=pd.product_no AND cpd.purchase_no=#{purchaseNo}
+		ORDER BY cpd.customproduct_no
+	</select>
+	
+	<!-- 구매후 구매번호추가 / 커스터마이징재료 수정은 delete 후 다시 insert -->
+	<update id="updateCustomProductPurchaseNo">
+		UPDATE customproduct
+		<set>
+			purchase_no=#{purchaseNo:NUMERIC}
+		</set>
+		<where>
+			customproduct_no = #{customProductNo}
+		</where>
+	</update>
+	
+	<update id="updateCustomProductStatus">
+		UPDATE customproduct
+		<set>
+			cart_status = '0'
+		</set>
+		<where>
+			customproduct_no = #{customProductNo}
+		</where>
+	</update>
+	
+	<!--장바구니에서 커스터마이징상품 수량 변경 / 옵션 취소하고 다시 선택-->
+	<update id="updateCustomProductCount">
+		UPDATE customproduct
+		<set>
+			count=#{count:NUMERIC}, price=#{price:NUMERIC}
+		</set>
+		<where>
+			customproduct_no = #{customProductNo}
+		</where>
+	</update>
+	
+	<!-- 장바구니리스트에서 삭제 눌렀을때 -->
+	<update id="deleteCustomProduct">
+		UPDATE customproduct
+		<set>
+			cart_status = '0'
+		</set>
+		<where>
+			customproduct_no = #{customProductNo}
+		</where>
+	</update>
+	
+
+	<!-- purchase -->
+	<insert id="insertPurchase">
+		INSERT INTO purchase
+		(purchase_no, user_id, price, address, name, phone, 
+		message, status, reg_date, payment_condition, email, usepoint)
+		values((seq_purchase_no.NEXTVAL),#{user.userId:VARCHAR},#{price:NUMERIC}, 
+		#{address:VARCHAR}, #{name:VARCHAR}, #{phone:VARCHAR}, #{message:VARCHAR},
+		'0', SYSDATE, #{paymentCondition:CHAR}, #{email:VARCHAR}, #{usePoint:NUMERIC})
+		<selectKey keyProperty="purchaseNo" resultType="int" order="AFTER">
+			SELECT seq_purchase_no.CURRVAL FROM DUAL
+		</selectKey>
+	</insert>
+	
+	<select id="getPurchase" resultMap="purchaseSelectMap">
+		SELECT * FROM purchase
+		<where>
+			purchase_no = #{purchaseNo}
+		</where>
+	</select>
+	
+	<select id="getListPurchase" resultMap="purchaseSelectMap" parameterType="map">
+		SELECT purchase_no, user_id, price, address, name, phone, email, message, purchase_status, reg_date, payment_condition, amount
+		FROM (SELECT inner_table.*, ROWNUM AS row_seq
+			FROM (SELECT *
+				FROM purchase
+				WHERE user_id=#{userId} AND status='0' AND purchase_status!='0'
+				<if test="search.searchCondition != null">
+					<if test="search.searchCondition == 0">
+						AND to_date(reg_date, 'yy/mm/dd') =to_date(SYSDATE, 'yy/mm/dd')
+					</if>
+					<if test="search.searchCondition == 1">
+						<![CDATA[
+						AND to_date(reg_date, 'yy/mm/dd')>=to_date(SYSDATE, 'yy/mm/dd')-7
+						]]>
+					</if>
+					<if test="search.searchCondition == 2">
+						AND to_date(reg_date, 'yy/mm/dd') &gt;= to_date(add_months(SYSDATE,-1),'yy/mm/dd')
+					</if>
+					<if test="search.searchCondition == 3">
+						AND to_date(reg_date, 'yy/mm/dd') &gt;=to_date(add_months(SYSDATE,-3),'yy/mm/dd')
+					</if>
+				</if>
+				ORDER BY purchase_no desc) inner_table
+			WHERE ROWNUM &lt; = #{search.endRowNum})
+		WHERE row_seq BETWEEN #{search.startRowNum} AND #{search.endRowNum}
+	</select>
+	
+	<update id="updatePurchase">
+		UPDATE purchase
+		<set>
+			imp_uid=#{imp_uid:VARCHAR}, amount=#{amount:VARCHAR}, purchase_status='1', status='0'
+		</set>
+		<where>
+			purchase_no = #{purchaseNo}
+		</where>
+	</update>
+	
+	<update id="updatePurchaseCode">
+		UPDATE purchase
+		<set>
+			purchase_status=#{purchaseStatus:CHAR}
+		</set>
+		<where>
+			purchase_no = #{purchaseNo}
+		</where>
+	</update>
+	
+	<update id="deletePurchase">
+		UPDATE purchase
+		<set>
+			status = '1'
+		</set>
+		<where>
+			purchase_no = #{purchaseNo}
+		</where>
+	</update>
+
+	
+	<!-- ROW Count -->
+	<select id="getCustomProductTotalCount" resultType="int" parameterType="map">
+		SELECT COUNT(*)
+	  	FROM( SELECT * FROM customproduct
+	  	<where>
+		user_id=#{userId:VARCHAR} AND cart_status='1') countTable
+		</where>
+	</select>
+	
+	<select id="getPurchaseTotalCount" resultType="int" parameterType="map">
+		SELECT COUNT(*)
+	  	FROM( SELECT *
+			FROM purchase
+			<where>
+				user_id=#{userId} AND status='0' AND purchase_status!='0'
+				<if test="search.searchCondition != null">
+					<if test="search.searchCondition == 0">
+						AND to_date(reg_date, 'yyyy/mm/dd') =to_date(SYSDATE, 'yyyy/mm/dd')
+					</if>
+					<if test="search.searchCondition == 1">
+						<![CDATA[
+						AND to_date(reg_date, 'yy/mm/dd')>=to_date(SYSDATE, 'yy/mm/dd')-7
+						]]>
+					</if>
+					<if test="search.searchCondition == 2">
+						AND to_date(reg_date, 'yy/mm/dd') &gt;= to_date(add_months(SYSDATE,-1),'yy/mm/dd')
+					</if>
+					<if test="search.searchCondition == 3">
+						AND to_date(reg_date, 'yy/mm/dd') &gt;=to_date(add_months(SYSDATE,-3),'yy/mm/dd')
+					</if>
+				</if> </where>) countTable	
+	</select>
+	
+	<select id="getSaleTotalCount" resultType="int" parameterType="String">
+		SELECT COUNT(*)
+	  	FROM( SELECT *
+			FROM purchase
+			<where>
+				purchase_status!='0'
+				<if test="searchCondition != null">
+					AND purchase_status=#{searchCondition:VARCHAR}
+				</if> </where>) countTable	
+	</select>
+	
+	<select id="getListSale" resultMap="purchaseSelectMap" parameterType="String">
+		SELECT purchase_no, user_id, price, address, name, message, purchase_status, reg_date, payment_condition, amount
+		FROM (SELECT inner_table.*, ROWNUM AS row_seq
+			FROM (SELECT *
+				FROM purchase
+				where purchase_status!='0'
+				<if test="searchCondition != null">
+					AND purchase_status=#{searchCondition:VARCHAR}
+				</if>
+				ORDER BY purchase_no desc) inner_table
+			WHERE ROWNUM &lt; = #{endRowNum})
+		WHERE row_seq BETWEEN #{startRowNum} AND #{endRowNum}
+	</select>
+
+
+</mapper>

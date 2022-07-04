@@ -1,0 +1,72 @@
+@charset "UTF-8";
+
+@font-face {
+    font-family: 'GmarketSansMedium';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+	font-family: 'GmarketSansMedium' !important;
+	margin:0;
+	padding:0;	
+}
+
+
+a:link {
+	color: black !important; 
+	text-decoration: none !important;
+}
+a:visited {
+	color:black !important;
+	text-decoration: none !important;
+}
+a:hover{
+	color: #ff4500 !important;
+}
+
+.headerNav:after{
+	display:block;
+	content: '';
+	border-bottom: solid 2px #ff4500;
+	transform: scaleX(0);
+	transition: transform 250ms ease-in-out;
+}
+
+.headerNav:hover:after{
+	transform: scaleX(1);
+}
+
+/* 버튼 */
+.seulBtn{		
+	width: 100px;
+	padding: 5px;
+	/*border: 2px solid #ff4500;*/
+	border:none !important;
+	text-align: center;
+	border-radius: 10%;
+	cursor: pointer;
+}
+.seulBtn:hover{
+	/*background-color: #ff4500;*/
+	color:#fff;
+}
+
+.btn {
+	/*border: 2px solid #ff4500 !important;*/
+	border: none !important;
+	background-color: #fff !important;
+	color: black !important;
+}
+
+.btn:hover{
+	/*background-color: #ff4500 !important;*/
+	color:#ff4500 !important;
+	opacity: 0.7;
+}
+
+th{
+	font-weight: normal;
+}
+

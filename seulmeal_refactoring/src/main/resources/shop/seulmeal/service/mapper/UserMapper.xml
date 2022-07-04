@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        
+	<mapper namespace="shop.seulmeal.service.mapper.UserMapper">
+	 
+	 <resultMap id="userSelectMap" type="shop.seulmeal.service.domain.User">
+		<id property="userId" 		column="user_id"    jdbcType="VARCHAR"/>
+		<result property="userName" 		column="user_name"  jdbcType="VARCHAR"/>
+		<result property="password" 		column="password"  jdbcType="VARCHAR"/>
+		<result property="birth" 		column="birth"  jdbcType="DATE"/>
+		<result property="address" 		column="address"  jdbcType="DATE"/>
+		<result property="phone" 		column="phone"  jdbcType="VARCHAR"/>
+		<result property="email" 		column="email"  jdbcType="VARCHAR"/>
+		<result property="grade" 		column="grade"  jdbcType="VARCHAR"/>
+		<result property="regDate" 		column="reg_date"  jdbcType="DATE"/>
+		<result property="loginDate" 		column="login_date"  jdbcType="DATE"/>
+		<result property="blockCount" 		column="block_count"  jdbcType="NUMERIC"/>
+		<result property="nickName" 		column="nickName"  jdbcType="VARCHAR"/>
+		<result property="profileImage" 		column="profile_image"  jdbcType="VARCHAR"/>
+		<result property="profileMessage" 		column="profile_message"  jdbcType="VARCHAR"/>
+		<result property="role" 		column="role"  jdbcType="VARCHAR"/>
+		<result property="userStatus" 		column="user_status"  jdbcType="VARCHAR"/>
+		<result property="totalCount" 		column="total_count"  jdbcType="NUMERIC"/>
+		<result property="confirmStatus" 		column="confirm_status"  jdbcType="VARCHAR"/>
+		<result property="blackLsitCount" 		column="blackLsit_count"  jdbcType="NUMERIC"/>
+		<result property="purchaseCount" 		column="purchase_count"  jdbcType="NUMERIC"/>
+		<result property="blackListStatus" 		column="blackList_status"  jdbcType="VARCHAR"/>
+		<result property="foodCategoryName1" 		column="foodCategory_name1"   jdbcType="CHAR"/>
+		<result property="foodCategoryName2" 		column="foodCategory_name2"   jdbcType="CHAR"/>
+		<result property="foodCategoryName3" 		column="foodCategory_name3"   jdbcType="CHAR"/>
+		<result property="totalPoint" 		column="total_point"   jdbcType="NUMERIC"/>
+		<collection property="parts" ofType="parts">
+			<result property="partsNo" column="parts_no" jdbcType="NUMERIC"/>
+			<result property="name" column="name" jdbcType="VARCHAR"/>
+		</collection>
+	</resultMap>
+	 
+		<insert id="insertUser">
+			INSERT
+			INTO users( user_id , user_name , password , birth , address, phone, email,  reg_date, nickname, confirm_status) 
+			VALUES	 (	#{userId} , #{userName} , #{password} , #{birth:DATE} , #{address:VARCHAR} , 
+								#{phone:VARCHAR} , #{email:VARCHAR} , SYSDATE, #{nickName:VARCHAR}, #{confirmStatus:CHAR} )
+		</insert>
+		
+		<insert id="insertHatesParts" parameterType="map">
+			INSERT INTO hates_parts(hates_parts_no, user_id, parts_no, parts_name)
+				SELECT seq_hates_parts_no.NEXTVAL, A.* FROM(
+					<foreach collection="list" item="parts" separator="UNION ALL">
+						SELECT 
+							#{userId:VARCHAR} as user_id,
+							#{parts.partsNo:INTEGER} as parts_no,
+							#{parts.name:VARCHAR} as parts_name
+							from dual
+					</foreach>
+				) A	
+		</insert>
+		
+		<select id="getUser" resultType="shop.seulmeal.service.domain.User" resultMap="userSelectMap">
+	        	SELECT u.*, hp.*, p.name FROM users u, hates_parts hp, parts p
+	        	<where>	        	
+	        	u.user_id = #{userId:VARCHAR}
+	        	AND u.user_id = hp.user_id(+)
+	        	AND hp.parts_no = p.parts_no(+)
+	        	</where>
+	    </select>
+	    
+	    <select id="getUserHatesParts" resultType="shop.seulmeal.service.domain.Parts">
+	    	select * from hates_parts where user_id = #{userId:VARCHAR}
+	    </select>
+	    
+	    <update id="updateUser">
+	    		UPDATE users
+	   	<set>
+	   		user_name 	= #{userName:VARCHAR} ,
+			password	= #{password:VARCHAR},
+			birth 		= #{birth:DATE} ,
+			address		= #{address:VARCHAR},
+			phone		= #{phone:VARCHAR},
+			email		= #{email:VARCHAR},
+			nickname	= #{nickName:VARCHAR},
+			profile_image	= #{profileImage:VARCHAR},
+			profile_message	= #{profileMessage:VARCHAR},
+			foodcategory_name1 = #{foodCategoryName1:VARCHAR},
+			foodcategory_name2 = #{foodCategoryName2:VARCHAR},
+			foodcategory_name3 = #{foodCategoryName3:VARCHAR}
+	   	</set>
+	   	WHERE user_id = #{userId}
+	    
+	    </update>
+		
+		<delete id="deleteUser">
+			UPDATE users SET user_status = 1 WHERE user_id = #{userId}	
+		</delete>
+		
+		<select id= "getListUser" resultMap="userSelectMap" parameterType="shop.seulmeal.common.Search">
+			SELECT *
+		  	FROM (	SELECT inner_table.* , ROWNUM AS row_seq
+		  					FROM		(	SELECT user_id , user_name, nickname
+												FROM users 
+												<if test="searchCondition != null">
+													<where>
+														<if test="searchCondition == 0 and searchKeyword !='' ">
+											 				user_id LIKE '%'||#{searchKeyword}||'%' OR user_name LIKE '%'||#{searchKeyword}||'%' 
+														</if>
+														<if test="searchCondition == 1 and searchKeyword !='' ">
+											 				blacklist_status = '1'
+														</if>
+													</where>
+												</if>
+												ORDER BY  reg_date DESC) inner_table
+							WHERE ROWNUM &lt;= #{endRowNum} )
+			WHERE row_seq BETWEEN #{startRowNum} AND #{endRowNum} 
+		</select>
+		
+		<!-- <select id= "getListBlackList" resultMap="blickListSelectMap" parameterType="shop.seulmeal.common.Search">
+		SELECT *
+		  	FROM (	SELECT inner_table.* , ROWNUM AS row_seq
+		  					FROM		(	SELECT user_id , reg_date
+												FROM relation 
+													<where>	
+													relation_status='2'	
+													</where>
+												ORDER BY  reg_date DESC) inner_table
+							WHERE ROWNUM &lt;= #{endRowNum} )
+			WHERE row_seq BETWEEN #{startRowNum} AND #{endRowNum}
+		
+		</select> -->
+		<select id= "getListBlackList" resultType="list" >
+		SELECT user_id , reg_date FROM relation where relation_status='2' ORDER BY  reg_date DESC
+		
+		</select>
+		
+		<select id="getListBlackListTotalCount" resultType="int" >
+		SELECT COUNT(*)
+			FROM( SELECT user_id , reg_date
+				FROM relation 
+						<where>
+							relation_status='2'	
+						</where>
+				) countTable
+		</select>
+		
+		
+		
+		
+		<select id="checkDuplicationUserId" resultType="int">
+			SELECT count(user_id) from users where user_id= #{userId}
+		</select>
+		
+		<select id="checkDuplicationNickName" resultType="int">
+			SELECT count(nickname) from users where nickname= #{nickName}
+		</select>
+		
+		<select id="checkDuplicationPhone" resultType="shop.seulmeal.service.domain.User">
+			SELECT user_id, user_name, phone from users where phone= #{phone}
+		</select>
+		
+		<select id="checkDuplicationEmail" resultType="shop.seulmeal.service.domain.User">
+			SELECT user_id, user_name, email from users where email= #{email}
+		</select>
+		
+		<select id="getListUserTotalCount" resultType="int" parameterType="shop.seulmeal.common.Search">
+			SELECT COUNT(*)
+			FROM( SELECT user_id , user_name , blacklist_status
+				FROM users
+					<if test="searchCondition != null">
+						<where>
+							<if test="searchCondition == 0 and searchKeyword !='' ">
+								user_id LIKE '%'||#{searchKeyword}||'%' OR user_name LIKE
+								'%'||#{searchKeyword}||'%' ORDER by user_name
+							</if>
+							<if test="searchCondition == 1 ">
+								blacklist_status = '1'
+							</if>
+						</where>
+					</if>
+				) countTable
+		</select>
+		
+		<update id="updateUserGrade">
+			UPDATE users
+				SET grade = 
+				CASE
+				WHEN purchase_count BETWEEN 0 AND 2 THEN '0'
+				WHEN purchase_count BETWEEN 3 AND 4 THEN '1'
+				WHEN purchase_count BETWEEN 5 AND 9 THEN '2'
+				ELSE '3'
+				END
+		</update>
+		
+		<update id="resetPurchaseCount">
+			UPDATE users SET purchase_count = 0
+		</update>
+		
+		<update id="updateBlockCount">
+			UPDATE users SET block_count = block_count +1 WHERE user_id = #{userId}
+		</update>
+		
+		
+		<update id="updateUserTotalPoint">
+			UPDATE users SET total_point = #{totalPoint} WHERE user_id =#{userId}
+		</update>
+		
+		<insert id="insertBlackList">
+			INSERT 
+				WHEN block_count = 50 THEN
+				INTO relation VALUES(seq_relation_no.NEXTVAL, user_id, null, SYSDATE, '2') SELECT user_id, block_count FROM users
+		</insert>
+		
+		<update id="resetBlockCount">
+			UPDATE users SET blacklist_status = 1, block_count = 0, blacklist_count = blacklist_count + 1, blacklist_date = SYSDATE WHERE block_count = 50
+		</update>
+		
+		<update id="updateBlackList">
+			merge into users u
+			using relation r
+			on(u.user_id = r.user_id and r.relation_status = '2' and TO_CHAR(r.reg_date, 'yy/mm/dd')  = TO_CHAR(SYSDATE-90, 'yy/mm/dd') )
+			WHEN matched THEN
+			update set u.blacklist_status = '0'	
+				
+		</update>
+		
+		<insert id="insertPoint">
+			INSERT INTO point (point_no, user_id, purchase_no, point_status, point, reg_date) 
+				VALUES(seq_point_no.NEXTVAL, #{userId:VARCHAR}, #{purchaseNo:NUMERIC}, #{pointStatus:VARCHAR}, #{point:NUMERIC}, SYSDATE)
+		<selectKey keyProperty="pointNo" resultType="int" order="AFTER">
+			SELECT seq_point_no.CURRVAL FROM DUAL
+		</selectKey>
+		</insert>
+		
+		<select id="getPoint" resultType="shop.seulmeal.service.domain.Point">
+	        	SELECT * FROM point WHERE point_no = #{pointNo}
+	    </select>
+		<delete id="deletePoint">
+			DELETE from point where purchase_no = #{purchaseNo}
+		</delete>
+		
+		<select id="getListPoint" resultType="shop.seulmeal.service.domain.Point" parameterType="map" >
+			SELECT *
+			FROM ( SELECT inner_table.* , ROWNUM AS row_seq
+				FROM ( SELECT point_no, purchase_no, point_status, point, reg_date
+					FROM point WHERE user_id = #{userId}
+					<if test="searchCondition != null">
+					<if test="searchCondition == 0">
+						AND point_status='0'
+					</if>
+					<if test="searchCondition == 1">
+						AND point_status='1'
+					</if>
+					<if test="searchCondition == 2">
+						AND point_status='2'
+					</if>
+				</if>
+					ORDER BY point_no DESC ) inner_table
+				WHERE ROWNUM &lt;= #{search.endRowNum} )
+			WHERE row_seq BETWEEN #{search.startRowNum} AND #{search.endRowNum}
+		</select>
+		
+		<select id="getListPointTotalCount" resultType="int" parameterType="map" >
+			SELECT COUNT(*)
+			FROM( SELECT point_no, purchase_no, point_status, point, reg_date
+				FROM point where user_id = #{userId}
+				<if test="searchCondition != null">
+					<if test="searchCondition == 0">
+						AND point_status='0'
+					</if>
+					<if test="searchCondition == 1">
+						AND point_status='1'
+					</if>
+					<if test="searchCondition == 2">
+						AND point_status='2'
+					</if>
+				</if>
+				) countTable
+		</select>
+		
+		
+		<select id="getProfile" resultType="shop.seulmeal.service.domain.User">
+			SELECT user_id, nickname, grade, profile_image, profile_message, foodcategory_name1, foodcategory_name2, foodcategory_name3 
+				FROM users WHERE user_id = #{userId:VARCHAR}
+		</select>
+		
+		<update id="updateProfile">
+	    		UPDATE users
+		   	<set>
+				nickname	= #{nickName:VARCHAR},
+				profile_image	= #{profileImage:VARCHAR},
+				profile_message	= #{profileMessage:VARCHAR},
+				foodcategory_name1 = #{foodCategoryName1:VARCHAR},
+				foodcategory_name2 = #{foodCategoryName2:VARCHAR},
+				foodcategory_name3 = #{foodCategoryName3:VARCHAR}
+		   	</set>
+		   	WHERE user_id = #{userId}
+		</update>
+		
+		<update id="updatePassword">
+			UPDATE users
+			<set>
+				password = #{password:VARCHAR}
+			</set>
+			WHERE user_id = #{userId}
+		</update>
+		
+		<select id="getRecentPurchase" resultType="string">
+			SELECT * FROM (SELECT NVL(purchase_no, 0) FROM purchase WHERE user_id = #{userId:VARCHAR} and purchase_status NOT IN ('0')  ORDER by reg_date DESC) WHERE ROWNUM =1	
+		</select>
+	
+	</mapper>     
