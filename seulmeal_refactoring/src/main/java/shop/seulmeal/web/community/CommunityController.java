@@ -2,7 +2,6 @@ package shop.seulmeal.web.community;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +9,8 @@ import java.util.Map;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -52,17 +53,17 @@ public class CommunityController {
    @Autowired
    private AttachmentsService attachmentsService;
 
-   int pageUnit = 5;
-   int pageSize = 5;
+   @Value("${pageUnit}")
+   private int pageUnit;
+   
+   @Value("${pageSize}")
+   private int pageSize;
 
-   // C
    public CommunityController() {
       System.out.println(this.getClass());
    }
-   
-   // M
-   // 게시판 메인
-   @GetMapping("/communityMain") // o
+      
+   @GetMapping("/communityMain") 
    public String communityMain(@RequestParam(required = false) String searchKeyword,
          @RequestParam(required = false) String searchCondition, Model model, HttpSession session) throws Exception {
 
@@ -139,6 +140,8 @@ public class CommunityController {
       model.addAttribute("blockMap", blockMap);
       model.addAttribute("search",search);
 
+      System.out.println("///////"+search);
+      
       return "community/communityMain";
    }
 
@@ -152,9 +155,6 @@ public class CommunityController {
    @Transactional(rollbackFor = Exception.class)
    public String insertPost(@ModelAttribute Post post, MultipartFile[] uploadfile, Attachments attachments,
          HttpSession session) throws IllegalStateException, IOException {
-
-      System.out.println("/////////////" + post);
-      System.out.println("/////////////" + uploadfile);
 
       post.setUser(((User) session.getAttribute("user")));
       System.out.println("///////////session 검증 : " + ((User) session.getAttribute("user")));
@@ -172,7 +172,6 @@ public class CommunityController {
 
    @GetMapping("/getPost/{postNo}") // oo
    public String getPost(@PathVariable int postNo, Model model, HttpSession session) {
-      
       
       // 해당 post
       Post post = communityService.getPost(postNo);
@@ -228,7 +227,6 @@ public class CommunityController {
 
    @PostMapping("/updatePost/{postNo}") // o
    public String updatePost(@ModelAttribute Post post, @PathVariable int postNo, MultipartFile[] uploadfile, Attachments attachments, String deleteAttachmentNo, String deleteAttachmentName) throws IllegalStateException, IOException {
-      System.out.println("/////////////"+uploadfile);
       
       // db와 폴더 첨부파일 삭제
       attachmentsService.deleteAttachments(deleteAttachmentNo, deleteAttachmentName);

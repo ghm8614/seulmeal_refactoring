@@ -9,6 +9,8 @@ import javax.servlet.http.HttpSession;
 
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -41,15 +43,17 @@ public class CommunityRestController {
 	@Autowired
 	private AttachmentsService attachmentsService;
 	
-	int pageUnit = 5;
-	int pageSize = 5;
+   @Value("${pageUnit}")
+   private int pageUnit;
+   
+   @Value("${pageSize}")
+   private int pageSize;
 
 	public CommunityRestController() {
 		System.out.println(this.getClass());
 	}
 	
-	// 무한스크롤
-	@GetMapping("getListPost") // oo
+	@GetMapping("getListPost") 
 	public List<Post> getListPost(@RequestParam(required = false, defaultValue = "2") int currentPage,
 			@RequestParam(required = false) String searchKeyword, @RequestParam(required = false) String searchOption ,
 			@RequestParam(required = false) String searchCondition, @RequestParam(required = false) String userId, HttpSession session) {
@@ -62,7 +66,6 @@ public class CommunityRestController {
 		search.setSearchKeyword(searchKeyword);
 		search.setSearchCondition(searchOption);
 		search.setSearchCondition(searchCondition);
-
 		
 		User loginUser = (User)session.getAttribute("user");
 
@@ -120,6 +123,7 @@ public class CommunityRestController {
 			}
 		}
 		System.out.println("/////aaaaa"+postList);
+		System.out.println("/////aaaaa"+search);
 		return postList;
 	}
 
