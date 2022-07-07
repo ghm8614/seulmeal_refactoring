@@ -80,7 +80,7 @@
 	            <iframe id="reviewListFrame" class="frame" style="height:100vh; width:100%; display:none;" src="/product/listReview/1"></iframe>
 	            
 	            <!-- community -->
-	            <iframe id="reportPostFrame" class="frame" style="height:100vh; width:100%; display:none;" src="/community/getListReportPost/0"></iframe>
+	            <iframe id="reportPostFrame" class="frame" style="height:100vh; width:100%; display:none;" src="/api/v1/community/posts/reports/0"></iframe>
 	            
 	            <!-- purchase -->
 	            <iframe id="saleFrame" class="frame" style="height:100vh; width:100%; display:none;" src="/purchase/getListSale/1"></iframe>

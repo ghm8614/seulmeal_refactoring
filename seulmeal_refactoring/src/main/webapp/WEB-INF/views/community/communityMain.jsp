@@ -436,13 +436,13 @@ div.modal-content{
                         <div class="user">
                             <!-- 1. 프로필 이미지 -->
                             <div class="profile-pic">
-                                <a class ="profile-link" href="/api/v1/community/getProfile/${post.user.userId}">
+                                <a class ="profile-link" href="/api/v1/community/profiles/${post.user.userId}">
                                     <img class="profile-img" src="/resources/attachments/profile_image/${post.user.profileImage}"/>
                                 </a>
                             </div>
                             <!-- 2. 닉네임 -->                       
                             <p id = "post_nickname" class="username">
-                                <a id= "profile-nick" class ="profile-link2" href="/community/getProfile/${post.user.userId}">${post.user.nickName}</a>
+                                <a id= "profile-nick" class ="profile-link2" href="/api/v1/community/profiles/${post.user.userId}">${post.user.nickName}</a>
                             </p>
                         </div>
                         <!-- 게시글 옵션 아이콘 -->
@@ -582,10 +582,10 @@ div.modal-content{
 	                <div class="profile-pic">
 	                	<c:choose> 
 							<c:when test="${not empty sessionScope.user.profileImage}">
-								<a href="/api/v1/community/getProfile/${sessionScope.user.userId}"><img id="profileImage" class="rounded-circle" src="/resources/attachments/profile_image/${sessionScope.user.profileImage}"/></a>
+								<a href="/api/v1/community/profiles/${sessionScope.user.userId}"><img id="profileImage" class="rounded-circle" src="/resources/attachments/profile_image/${sessionScope.user.profileImage}"/></a>
 							</c:when>
 							<c:otherwise>
-								<a href="/api/v1/community/getProfile/${sessionScope.user.userId}"><img id="profileImage" class="rounded-circle" src="/resources/attachments/profile_image/default_profile.jpg"/></a>
+								<a href="/api/v1/community/profiles/${sessionScope.user.userId}"><img id="profileImage" class="rounded-circle" src="/resources/attachments/profile_image/default_profile.jpg"/></a>
 							</c:otherwise>						
 						</c:choose>
 	                    <!-- img src="img/profile-pic.png" alt="로그인유저"-->
@@ -594,10 +594,10 @@ div.modal-content{
 	                    <p class="username">
 	                    	<c:choose> 
 								<c:when test="${not empty sessionScope.user.nickName}">
-									<a style ="font-size: 19px;" class = "username" href="/api/v1/community/getProfile/${sessionScope.user.userId}">${sessionScope.user.nickName}</a>
+									<a style ="font-size: 19px;" class = "username" href="/api/v1/community/profiles/${sessionScope.user.userId}">${sessionScope.user.nickName}</a>
 								</c:when>
 								<c:otherwise>
-									<a style ="font-size: 19px;" class = "username" href="/api/v1/community/getProfile/${sessionScope.user.userId}">${sessionScope.user.userId}</a>							
+									<a style ="font-size: 19px;" class = "username" href="/api/v1/community/profiles/${sessionScope.user.userId}">${sessionScope.user.userId}</a>							
 								</c:otherwise>						
 							</c:choose>
 	                    </p>
@@ -857,8 +857,8 @@ div.modal-content{
 								
 								//$(postCard).find("a.profile-link").attr("href","/community/getProfile/"+post.user.userId);							
 								$(postCard).find(".profile-img").attr("src","/resources/attachments/profile_image/"+post.user.profileImage);
-								$(postCard).find(".profile-link").attr("href","/community/getProfile/"+post.user.userId)
-								$(postCard).find(".profile-link2").attr("href","/community/getProfile/"+post.user.userId)
+								$(postCard).find(".profile-link").attr("href","/api/v1/community/profiles/"+post.user.userId)
+								$(postCard).find(".profile-link2").attr("href","/api/v1/community/profiles/"+post.user.userId)
 								$(postCard).find(".profile-link2").text(post.user.nickName);
 								
 								$(postCard).find("i.bi.bi-eye.icon").text(post.views);

@@ -10,7 +10,6 @@ import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -250,29 +249,12 @@ public class CommunityController {
 
       return "redirect:/api/v1/community/";
    }
-
    
-   
-   
-   ////////////////
-   @PostMapping("/posts/reports") // o
-   public String insertReportPost(@ModelAttribute Report report, HttpSession session) {
-	   System.out.println("//////report: "+ report);
-	   
-	  //User loginUser = (User)session.getAttribute("user");
-	   
-	  //report.setReporterId(loginUser.getUserId());
-      communityService.insertReportPost(report);
-      
-      return "redirect:/community/getPost/" + report.getPostNo();
-   }
-   
-   @GetMapping("getPostAdmin/{postNo}") // oo
+   @GetMapping("/post/reports/{postNo}")
    public String getPostAdmin(@PathVariable int postNo, Model model, HttpSession session) {      
       
       // 해당 post
       Post post = communityService.getPostAdmin(postNo);
-      //System.out.println("//////"+post.getContent());
       
       // 타인 게시글 조회시에만, 조회수 증가 
       if(!((User)session.getAttribute("user")).getUserId().equals(post.getUser().getUserId()) ) {
@@ -303,7 +285,7 @@ public class CommunityController {
       return "community/getCommunityPost";
    }
 
-   @GetMapping("/getListReportPost/{currentPage}") // o
+   @GetMapping("/posts/reports/{currentPage}") // o
    public String getListReportPost(
          @PathVariable(value = "currentPage", required = false) Integer currentPage,
          Model model) {
@@ -330,14 +312,7 @@ public class CommunityController {
       return "/community/listCommunityReportPost";
    }
 
-   @PutMapping("/deleteReportPost/{postNo}") // o
-   public String deleteReportPost(@PathVariable int postNo) {
-
-      communityService.deleteReportPost(postNo);
-      return "redirect:/community/getListReportPost";
-   }
-
-   @GetMapping("getProfile/{userId}")
+   @GetMapping("/profiles/{userId}")
    public String getProfile(@PathVariable String userId, Model model, HttpSession session, Relation relation) throws Exception {
       
       User loginUser = (User)session.getAttribute("user");
@@ -418,7 +393,7 @@ public class CommunityController {
       return "/community/getCommunityProfile";
    }
 
-   @GetMapping("updateProfile") // oo
+   @GetMapping("/profile") // oo
    public String updateProfile(HttpSession session, Model model) throws Exception {
 
       model.addAttribute("foodcategoryList",productService.getListFoodCategory());
@@ -426,7 +401,7 @@ public class CommunityController {
    }
 
    
-   @PostMapping("updateProfile") // oo
+   @PutMapping("/profile") // oo
    public String updateProfile(MultipartFile imageFile, @ModelAttribute User user, String[] foodcategory,  HttpSession session, Model model)
          throws Exception {
 
@@ -485,7 +460,7 @@ public class CommunityController {
       userService.updateProfile(user);
       session.setAttribute("user", user);
 
-      return "redirect:/community/getProfile/" + user.getUserId();
+      return "redirect:/api/v1/community/profiles/" + user.getUserId();
    }
    
 }

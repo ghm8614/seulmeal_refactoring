@@ -423,7 +423,7 @@ button#deleteBlockBtn {
 					<span id="profile-name"> ${profileUser.nickName} </span>
 					<c:if test="${isMine == true}">
 						<span id="profile-update">
-							<a class= "profile-update btn" style="float:right" href="/community/updateProfile">프로필 정보 수정</a>
+							<a class= "profile-update btn" style="float:right" href="/api/v1/community/profile">프로필 정보 수정</a>
 						</span>
 					</c:if>
 				</div>
@@ -573,7 +573,7 @@ button#deleteBlockBtn {
                     	<c:when test="${not empty post.attachments}">
                     		<div class="your-class">
                     	 		<c:forEach var="attach" items="${post.attachments}">	
-                            	    <a class ="post-link" href="/community/getPost/${post.postNo}">
+                            	    <a class ="post-link" href="/api/v1/community/posts/${post.postNo}">
                             	        <img id = "post-img" class="post-image" src="/resources/attachments/${attach.attachmentName}"/>
                                 	</a>
                     			</c:forEach>
@@ -582,7 +582,7 @@ button#deleteBlockBtn {
                     	<c:otherwise>
                     		<div class="post-list-title">${post.title}</div>
                         	<div id="post-list-content" class="post-list-content">
-                            	<div style="margin-bottom: 30px;"><a class="post-shortContent" href="/community/getPost/${post.postNo}">${post.shortContent}</a></div>								
+                            	<div style="margin-bottom: 30px;"><a class="post-shortContent" href="/api/v1/community/posts/${post.postNo}">${post.shortContent}</a></div>								
                         	</div>
                     	</c:otherwise>
                     </c:choose>
