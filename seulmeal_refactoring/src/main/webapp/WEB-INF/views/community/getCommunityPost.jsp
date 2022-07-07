@@ -131,8 +131,6 @@ button#insertCommentBtn {
 	
 	<div class="container">
 	
-
-
 		<!-- 게시글 이미지 또는 제목/간략내용 -->
 		<div class="your-class" style="margin-bottom:30px">
 				<c:forEach var="attachment" items="${attachmentList}">
@@ -153,16 +151,17 @@ button#insertCommentBtn {
 					  </div>
 					 <div class="info" style="padding-left:30px;">
 						<div class="user" style="width:100%"> 
-							<div class="nick">
+							<form class="update-delete-form" action="/api/v1/community/posts/${post.postNo}" method = "POST">
+								<input type="hidden" name="_method" value="DELETE">
 									<c:if test="${sessionScope.user.userId == post.user.userId}">
-										<span class="btn up del"  style="float:right; display:inline-block; "><button style="padding:0px 10px 0px 0px;"	 id="updatePostBtn" type="button"
-											class="btn btn-primary" onclick="location.href='/community/updatePost/${post.postNo}'">수정</button>
-											<button id="deletePostBtn" type="button" style="padding : 0px 15px 0px 0px;" data-value = "${post.postNo}" 
-											 class="btn btn-primary"  onclick="deletePost(this)">삭제</button>
-											
-											</span>
+										<span class="btn up del"  style="float:right; display:inline-block; ">
+											<button style="padding:0px 10px 0px 0px;" id="updatePostBtn" type="button"
+											class="btn btn-primary" onclick="location.href='/api/v1/community/posts/update/${post.postNo}'">수정</button>
+											<button id="deletePostBtn" type="button" style="padding : 0px 15px 0px 0px;"
+											 class="btn btn-primary" onclick="deletePost()">삭제</button>	
+										</span>
 									</c:if>
-							</div>
+							</form>
 						</div>
 					</div>
 					
@@ -189,13 +188,6 @@ button#insertCommentBtn {
 	                    <div class="post-time" style="margin-right:40px; text-align:right;">${post.regDate}</div>
 	                </div>
 					
-					
-					<!-- div class="comment_count">
-						<span id="like_cnt">좋아요  <span class="like-cnt">${post.likeCount}</span>개</span>
-						<i class="bi bi-eye"></i> <span id="v_cnt">${post.views}</span>
-						<i class="bi bi-chat-left"></i> <span id="c_cnt">${post.commentCount}</span>
-						<div id ="reg-date">${post.regDate}</div>
-					</div-->
 				</div>
 				
 		</div>
@@ -320,14 +312,11 @@ button#insertCommentBtn {
 		
 	}
 	
-	
-	function deletePost(e){
-		
-		let postNo = $(e).data("value");
-		
+	// 게시글 삭제
+	function deletePost(){
 		let result = confirm("정말 삭제하시겠습니까?")
 		if(result){
-			window.location.href= "/community/deletePost/"+postNo;
+			$(".update-delete-form").submit();
 		}
 	}
 	

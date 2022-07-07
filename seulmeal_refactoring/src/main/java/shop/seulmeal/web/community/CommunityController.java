@@ -14,6 +14,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,7 +39,7 @@ import shop.seulmeal.service.product.ProductService;
 import shop.seulmeal.service.user.UserService;
 
 @Controller
-@RequestMapping("/community/*")
+@RequestMapping("/api/v1/community")
 public class CommunityController {
 
    @Autowired
@@ -63,7 +64,7 @@ public class CommunityController {
       System.out.println(this.getClass());
    }
       
-   @GetMapping("/communityMain") 
+   @GetMapping("/") 
    public String communityMain(@RequestParam(required = false) String searchKeyword,
          @RequestParam(required = false) String searchCondition, Model model, HttpSession session) throws Exception {
 
@@ -145,13 +146,12 @@ public class CommunityController {
       return "community/communityMain";
    }
 
-   // Post
-   @GetMapping("/insertPost") // oo
+   @GetMapping("/post")
    public String insertPost() {
       return "community/insertCommunityPost";
    }
 
-   @PostMapping("/insertPost") // x
+   @PostMapping("/post")
    @Transactional(rollbackFor = Exception.class)
    public String insertPost(@ModelAttribute Post post, MultipartFile[] uploadfile, Attachments attachments,
          HttpSession session) throws IllegalStateException, IOException {
@@ -167,10 +167,10 @@ public class CommunityController {
          attachmentsService.insertAttachments(uploadfile, attachments);
       }
 
-      return "redirect:getPost/" + post.getPostNo();
+      return "redirect:/api/v1/community/posts/" + post.getPostNo();
    }
 
-   @GetMapping("/getPost/{postNo}") // oo
+   @GetMapping("/posts/{postNo}")
    public String getPost(@PathVariable int postNo, Model model, HttpSession session) {
       
       // 해당 post
@@ -206,7 +206,7 @@ public class CommunityController {
       return "community/getCommunityPost";
    }
 
-   @GetMapping("/updatePost/{postNo}") // o
+   @GetMapping("/posts/update/{postNo}") // o
    public String updatePost(@PathVariable int postNo, Model model) {
 
       // post 가져오기
@@ -225,13 +225,12 @@ public class CommunityController {
       return "community/updateCommunityPost";
    }
 
-   @PostMapping("/updatePost/{postNo}") // o
+   @PutMapping("/posts/{postNo}")
    public String updatePost(@ModelAttribute Post post, @PathVariable int postNo, MultipartFile[] uploadfile, Attachments attachments, String deleteAttachmentNo, String deleteAttachmentName) throws IllegalStateException, IOException {
       
       // db와 폴더 첨부파일 삭제
       attachmentsService.deleteAttachments(deleteAttachmentNo, deleteAttachmentName);
 
-      
       // 새로 추가한 첨부파일 등록, 유효성 체크
       if(uploadfile != null ) {
          attachments.setPostNo(Integer.toString(postNo));
@@ -241,24 +240,30 @@ public class CommunityController {
       // post 업데이트
       communityService.updatePost(post);
       
-      return "redirect:/community/getPost/" + postNo;
+      return "redirect:/api/v1/community/posts/" + postNo;
    }
 
-   @GetMapping("/deletePost/{postNo}") // o
+   @DeleteMapping("/posts/{postNo}")
    public String deletePost(@PathVariable int postNo) {
 
       communityService.deletePost(postNo);
 
-      return "redirect:/community/communityMain";
+      return "redirect:/api/v1/community/";
    }
 
-   // Post
-   @PostMapping("/insertReportPost") // o
-   public String insertReportPost(@ModelAttribute Report report) {
-
-      System.out.println("//////: "+ report);
-      
+   
+   
+   
+   ////////////////
+   @PostMapping("/posts/reports") // o
+   public String insertReportPost(@ModelAttribute Report report, HttpSession session) {
+	   System.out.println("//////report: "+ report);
+	   
+	  //User loginUser = (User)session.getAttribute("user");
+	   
+	  //report.setReporterId(loginUser.getUserId());
       communityService.insertReportPost(report);
+      
       return "redirect:/community/getPost/" + report.getPostNo();
    }
    

@@ -153,7 +153,7 @@
 	        <a class="nav-link headerNav" href="#" id="blackUser">게시판</a>
 	       </c:if>
 	       <c:if test="${user.blackListStatus ==0 }">
-	        <a class="nav-link headerNav" href="/community/communityMain">게시판</a>
+	        <a class="nav-link headerNav" href="/api/v1/community/">게시판</a>
 	       </c:if>
 	       
 	          

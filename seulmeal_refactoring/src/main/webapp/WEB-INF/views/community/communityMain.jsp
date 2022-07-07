@@ -390,7 +390,7 @@ div.modal-content{
 	<!-- 검색, 정렬, 게시글 작성버튼 작성 -->
 	<div class="search-order-post">	
 	
-		<form class="navbar" action="/community/communityMain" method="GET">
+		<form class="navbar" action="/api/v1/community/" method="GET">
 			<div style="margin:auto;">
 				<div class = "nav-wrapper" >	
 				    <input  class="form-control mr-sm-2" id = "search" name = "searchKeyword"  placeholder="제목+내용" type="search" aria-label="Search">
@@ -398,7 +398,7 @@ div.modal-content{
 			    </div>
 			</div>
 			<c:if test="${not empty sessionScope.user.userId}">
-				<button  type="button" onclick="location.href='/community/insertPost'" class="btn btn-primary">
+				<button  type="button" onclick="location.href='/api/v1/community/post'" class="btn btn-primary">
 					게시글 작성
 				</button>
 			</c:if>
@@ -408,13 +408,13 @@ div.modal-content{
 				<div class="order-nav">
 					<ul class="nav">
 					  <li class="nav-item">
-					    <a class="nav-link active"  href="/community/communityMain?searchCondition=1">조회순</a>
+					    <a class="nav-link active"  href="/api/v1/community/?searchCondition=1">조회순</a>
 					  </li>
 					  <li class="nav-item">
-					    <a class="nav-link"  href="/community/communityMain?searchCondition=2">좋아요순</a>
+					    <a class="nav-link"  href="/api/v1/community/?searchCondition=2">좋아요순</a>
 					  </li>
 					  <li class="nav-item">
-					    <a class="nav-link"  href="/community/communityMain?searchCondition=3">최신순</a>
+					    <a class="nav-link"  href="/api/v1/community/?searchCondition=3">최신순</a>
 					  </li>
 					</ul>
 				</div>
@@ -436,7 +436,7 @@ div.modal-content{
                         <div class="user">
                             <!-- 1. 프로필 이미지 -->
                             <div class="profile-pic">
-                                <a class ="profile-link" href="/community/getProfile/${post.user.userId}">
+                                <a class ="profile-link" href="/api/v1/community/getProfile/${post.user.userId}">
                                     <img class="profile-img" src="/resources/attachments/profile_image/${post.user.profileImage}"/>
                                 </a>
                             </div>
@@ -467,11 +467,13 @@ div.modal-content{
 										<c:choose>
 											<c:when test="${sessionScope.user.userId == post.user.userId}">
 												<div>
-													<div class="postOption" onclick="location.href='/community/updatePost/${post.postNo}'">수정하기</div>
+													<div class="postOption" onclick="location.href='/api/v1/community/posts/update/${post.postNo}'">수정하기</div>
 												</div>
 												<hr>
 												<div>
-													<div class="postOption" onclick="deletePost(this)" data-value="${post.postNo}">삭제하기</div>
+													<form class="postOption" id = "delete-post" action="/api/v1/community/posts/${post.postNo}" method = "POST" onclick="deletePost()">삭제하기
+														<input type="hidden" name = "_method" value="DELETE">
+													</form>
 												</div>					
 											</c:when>
 											<c:otherwise>
@@ -503,7 +505,7 @@ div.modal-content{
 					        </button>
 					      </div>
 					      <div class="modal-body">
-					        <form class="report-form" >
+					        <form class="report-form" action= "/api/v1/community/posts/reports" method = "POST" >
 					          <div class="report">
 					            <label for="message-text" class="col-form-label"></label>
 					            <textarea class="form-control" id = "reason" name="reason" rows="5" placeholder="신고사유를 적어주세요."></textarea>   <!-- 신고사유 -->
@@ -513,7 +515,7 @@ div.modal-content{
 					        </form>
 					      </div>
 					      <div class="modal-footer">
-					        <button type="button" class="btn btn-primary" data-value="${post.postNo}" onclick="reportPost(this)">신고등록</button>
+					        <button type="button" class="btn btn-primary" data-value="${post.postNo}" onclick="reportPost()">신고등록</button>
 					        <button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
 					      </div>
 					    </div>
@@ -527,7 +529,7 @@ div.modal-content{
                     	<c:when test="${not empty post.attachments}">
                     		<div class="your-class">
                     	 		<c:forEach var="attach" items="${post.attachments}">	
-                            	    <a class ="post-link" href="/community/getPost/${post.postNo}">
+                            	    <a class ="post-link" href="/api/v1/community/posts/${post.postNo}">
                             	        <img id = "post-img" class="post-image" src="/resources/attachments/${attach.attachmentName}"/>
                                 	</a>
                     			</c:forEach>
@@ -536,7 +538,7 @@ div.modal-content{
                     	<c:otherwise>
                     		<div class="post-list-title">${post.title}</div>
                         	<div  class="post-list-content">
-                            	<div style="margin-bottom: 30px;"><a class="post-shortContent" href="/community/getPost/${post.postNo}">${post.shortContent}</a></div>								
+                            	<div style="margin-bottom: 30px;"><a class="post-shortContent" href="/api/v1/community/posts/${post.postNo}">${post.shortContent}</a></div>								
                         	</div>
                     	</c:otherwise>
                     </c:choose>
@@ -580,10 +582,10 @@ div.modal-content{
 	                <div class="profile-pic">
 	                	<c:choose> 
 							<c:when test="${not empty sessionScope.user.profileImage}">
-								<a href="/community/getProfile/${sessionScope.user.userId}"><img id="profileImage" class="rounded-circle" src="/resources/attachments/profile_image/${sessionScope.user.profileImage}"/></a>
+								<a href="/api/v1/community/getProfile/${sessionScope.user.userId}"><img id="profileImage" class="rounded-circle" src="/resources/attachments/profile_image/${sessionScope.user.profileImage}"/></a>
 							</c:when>
 							<c:otherwise>
-								<a href="/community/getProfile/${sessionScope.user.userId}"><img id="profileImage" class="rounded-circle" src="/resources/attachments/profile_image/default_profile.jpg"/></a>
+								<a href="/api/v1/community/getProfile/${sessionScope.user.userId}"><img id="profileImage" class="rounded-circle" src="/resources/attachments/profile_image/default_profile.jpg"/></a>
 							</c:otherwise>						
 						</c:choose>
 	                    <!-- img src="img/profile-pic.png" alt="로그인유저"-->
@@ -592,10 +594,10 @@ div.modal-content{
 	                    <p class="username">
 	                    	<c:choose> 
 								<c:when test="${not empty sessionScope.user.nickName}">
-									<a style ="font-size: 19px;" class = "username" href="/community/getProfile/${sessionScope.user.userId}">${sessionScope.user.nickName}</a>
+									<a style ="font-size: 19px;" class = "username" href="/api/v1/community/getProfile/${sessionScope.user.userId}">${sessionScope.user.nickName}</a>
 								</c:when>
 								<c:otherwise>
-									<a style ="font-size: 19px;" class = "username" href="/community/getProfile/${sessionScope.user.userId}">${sessionScope.user.userId}</a>							
+									<a style ="font-size: 19px;" class = "username" href="/api/v1/community/getProfile/${sessionScope.user.userId}">${sessionScope.user.userId}</a>							
 								</c:otherwise>						
 							</c:choose>
 	                    </p>
@@ -830,7 +832,7 @@ div.modal-content{
 									$(postCard).find(".your-class-m").append(div_2);
 
 									$(postCard).find(".post-list-title").text(post.title);
-									$(postCard).find(".post-shortContent").attr("href","/community/getPost/"+post.postNo)
+									$(postCard).find(".post-shortContent").attr("href","/api/v1/community/post/"+post.postNo)
 									$(postCard).find(".post-shortContent").append(post.shortContent);
 								}else{
 									
@@ -843,7 +845,7 @@ div.modal-content{
 												<img id = "post-img" class="post-image" src="/resources/attachments/\${post.attachments[j].attachmentName}"/>
 											</a>
 											`);
-										$(postCard).find(".post-link").attr("href","/community/getPost/"+post.postNo);
+										$(postCard).find(".post-link").attr("href","/api/v1/community/post/"+post.postNo);
 									}
 								}
 								
@@ -889,13 +891,10 @@ div.modal-content{
 		
 	});
 	
-	function deletePost(e){
-		
-		let postNo = $(e).data("value");
-		
-		let result = confirm("정말 삭제하시겠습니까?")
+	function deletePost(){
+		let result = confirm("정말 삭제하시겠습니까?");
 		if(result){
-			window.location.href= "/community/deletePost/"+postNo;
+			$("#delete-post").submit();
 		}
 	}
 	
@@ -928,14 +927,14 @@ div.modal-content{
 	
 	// 게시글 신고 넣기
 	function reportPost(e){		
-		const postNo = $(e).data("value");
-		const reason = $(e).parent().parent().find("#reason").val();
+		//const postNo = $(e).data("value");
+		//const reason = $(e).parent().parent().find("#reason").val();
 		
 		const modal = $(e).parent().parent().parent().parent()
 		
-		
+		/*
 		$.ajax({
-			url : "/community/api/insertReportPost",
+			url : "/api/v1/community/posts/reports",
 			method : "POST",
 			data : JSON.stringify({
 				postNo : postNo,
@@ -949,8 +948,10 @@ div.modal-content{
 	        		modal.modal('hide');
 	        	}
 	        }
-		})		
-		//$(".report-form").attr("method","POST").attr("action","/community/insertReportPost").submit();
+		})*/		
+		$(".report-form").submit();
+		toastr.error("게시글 신고가 완료 되었습니다.","게시글 신고 완료",{timeOut:10000})
+		modal.modal('hide');
 	}
 	
 	// 팔로우 해제
