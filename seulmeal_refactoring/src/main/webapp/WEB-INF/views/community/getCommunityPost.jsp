@@ -335,7 +335,7 @@ button#insertCommentBtn {
 							//console.log("jsonReq: " + jsonReq);
 
 									$.ajax({
-										url : "/community/api/insertComment",
+										url : "/api/v1/community/comments",
 										method : "POST",
 										data : JSON.stringify(jsonReq), //@RequestBody
 										//data : jsonReq,
@@ -365,60 +365,34 @@ button#insertCommentBtn {
 														class="btn btn-primary deleteC" data-value="\${data.commentNo}">삭제</button>
 												</div>
 											</div>`
-											
 											// 댓글 맨위에 추가
 											$("#comment_container").prepend(comment);
-											
 											deleteComment();
-
 										},error: function(status, jqXHR){
-											console.log("error status: "+ status);
-											console.log("jqXHR: "+ jqXHR);
 										}
 									});
-									
 							// 댓글 내용 비우기
 							$("#comment_content").val("");
-							
-							
 						});
 
 		
-		
 		function deleteComment(){
-			
 			$(".btn-primary.deleteC").on("click", function() {
-				
 				let commentNo = $(this).data("value");
-				//alert("commentNo: " + commentNo);
-				console.log("commentNo: " + commentNo);
-				
-				
 				let result = confirm("정말 삭제하시겠습니까?");
 				if(result){
 					$.ajax({
-						url : "/community/api/deleteComment/" + commentNo,
-						method : "POST",
-
+						url : "/api/v1/community/comments/" + commentNo,
+						method : "DELETE",
 						success : function(data, status, jqXHR) {
-							console.log("data: " + data);
-							console.log("success status: " + status);
-							console.log("jqXHR: " + jqXHR);
-							
 						}, error: function(status, jqXHR){
-							console.log("error status: "+ status);
-							console.log("jqXHR: "+ jqXHR);
 						}
 					});
-					
 					// 댓글 삭제
 					$(this).parent().parent().remove();
 				}
-				
 			});
-			
 		}
-		
 		deleteComment();
 
 		
@@ -432,14 +406,11 @@ button#insertCommentBtn {
 			const div_like_cnt = $("#heart-cnt");
 			
 			$.ajax({
-				url : "/community/api/insertLike/" + postNo,
+				url : "/api/v1/community/likes/" + postNo,
 				method : "POST",
 				success : function (data, status, jqXHR){
 					
 	            	console.log(data); //응답 body부 데이터
-					//console.log(JSON.stringify(data));
-	            	//console.log(status); //"succes"
-	            	//console.log(jqXHR)
 					           	
 	            	const first_key = Object.keys(data)[0];
 	            	const value = data[first_key];
@@ -454,13 +425,9 @@ button#insertCommentBtn {
 	            		heart.attr("class", "bi bi-heart icon");
 	            		heart.css("color","black");
 	            	}
-	        		
 	            	// 좋아요 개수 수정
 					div_like_cnt.html(value); 
-				
 				}, error : function(jqXHR, status){
-					console.log(jqXHR);	// 응답 메시지
-					console.log(status); // "errror"
 				}
 			});
 
@@ -490,18 +457,10 @@ button#insertCommentBtn {
 					//alert("currentPage: "+currentPage);
 					//console.log("currentPage: "+currentPage);
 					$.ajax({
-						url:"/community/api/getListComment/"+postNo+"?currentPage="+currentPage,
+						url:"/api/v1/community/comments/"+postNo+"?currentPage="+currentPage,
 						type:"GET",
 						datatype:"json",
 						success: function(data, status, jqXHR){
-							
-							//console.log("success status: "+ status);
-							//console.log("data: " + data);
-							//console.log("jqXHR: "+ jqXHR);
-							//console.log("json/stringify: "+JSON.stringify(data));						
-							//const comments = JSON.stringify(data);					
-							//console.log($(".d-flex.mb-4").clone()[0]);
-							//alert("//"+data.resultPage.maxPage);
 							
 							for(let i = 0; i<data.length; i++){
 								const comment = data[i];
@@ -521,12 +480,6 @@ button#insertCommentBtn {
 								}
 								
 								$(commentCard).prepend(layerComment);
-								/*
-								console.log(comment.user.profileImage);
-								console.log(comment.user.nickName);
-								console.log(comment.content);
-								console.log(comment.regDate);
-								*/
 								
 								$(commentCard).find("#comment-profile-img").attr("src","/resources/attachments/profile_image/"+comment.user.profileImage);
 								$(commentCard).find(".fw-bold").text(comment.user.nickName);
@@ -534,22 +487,16 @@ button#insertCommentBtn {
 								$(commentCard).find(".comment-reg").text(comment.regDate);
 								
 								$("#comment_container").append(commentCard);
-								
 								deleteComment();
-								
 								}
 						}
 						, error: function(status, jqXHR){
-							console.log("error status: "+ status);
-							console.log("jqXHR: "+ jqXHR);
 							alert("페이지 로드 실패");
 						}
-						
 					})//jQuery.ajax()
 					// 위치 중요(js 함수 안, jQuery 함수 밖)
 					currentPage ++;
 				}//getListComment()
-				
 			})
 		});
 
