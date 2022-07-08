@@ -892,24 +892,15 @@ button#deleteBlockBtn {
 			function getListPost(){
 				
 				$.ajax({
-					url:"/community/api/getListPost?currentPage="+currentPage+"&userId="+userId,
+					url:"/api/v1/community/posts?currentPage="+currentPage+"&userId="+userId,
 					type:"GET",
 					datatype:"json",
 					success: function(data, status, jqXHR){
-
-						console.log("success status: "+ status);
-						console.log("data: " + data);
-						console.log("jqXHR: "+ jqXHR);
-						console.log("json/stringify: "+JSON.stringify(data));						
-						//const posts = JSON.stringify(data);	
-						
 								
 						for(let i = 0; i<data.length; i++){
 							
 							let post = data[i];
-							
 							let likeStats = post.likeStatus;
-							console.log("/////"+likeStats)
 							
 							let postCardHtml = `
 								<div class="post-card">
@@ -968,7 +959,7 @@ button#deleteBlockBtn {
 								$(postCard).find(".your-class-m").append(div_2);
 
 								$(postCard).find(".post-list-title").text(post.title);
-								$(postCard).find(".post-shortContent").attr("href","/community/getPost/"+post.postNo)
+								$(postCard).find(".post-shortContent").attr("href","/api/v1/community/post/"+post.postNo)
 								$(postCard).find(".post-shortContent").append(post.shortContent);
 							}else{
 								
@@ -982,7 +973,7 @@ button#deleteBlockBtn {
 											<img id = "post-img" class="post-image" src="/resources/attachments/\${post.attachments[j].attachmentName}"/>
 										</a>
 										`);
-									$(postCard).find(".post-link").attr("href","/community/getPost/"+post.postNo);
+									$(postCard).find(".post-link").attr("href","/api/v1/community/post/"+post.postNo);
 								}
 							}
 							
@@ -994,8 +985,8 @@ button#deleteBlockBtn {
 							
 							//$(postCard).find("a.profile-link").attr("href","/community/getProfile/"+post.user.userId);							
 							$(postCard).find(".profile-img").attr("src","/resources/attachments/profile_image/"+post.user.profileImage);
-							$(postCard).find(".profile-link").attr("href","/community/getProfile/"+post.user.userId)
-							$(postCard).find(".profile-link2").attr("href","/community/getProfile/"+post.user.userId)
+							$(postCard).find(".profile-link").attr("href","/api/v1/community/profiles/"+post.user.userId)
+							$(postCard).find(".profile-link2").attr("href","/api/v1/community/profiles/"+post.user.userId)
 							$(postCard).find(".profile-link2").text(post.user.nickName);
 							
 							$(postCard).find("i.bi.bi-eye.icon").text(post.views);
@@ -1005,11 +996,8 @@ button#deleteBlockBtn {
 							$(postCard).find(".option_icon").attr("data-value", post.postNo);
 							//$(postCard).find(".option_icon").attr("data-target",".fade\${index}");
 							
-							console.log("postC: "+postCard);
-							
 							$(".left-col").append(postCard);
 
-								
 							}//for
 							slick2('.your-class'+currentPage);								
 						}//success
@@ -1018,18 +1006,11 @@ button#deleteBlockBtn {
 							console.log("jqXHR: "+ jqXHR);
 							alert("페이지 로드 실패");
 						}
-						
 					})//jQuery.ajax()
-					
 				currentPage ++;
 				}//getListPost
-				
 		})//window.scroll()
-		
-		
 	});
-
-	
 	</script>
 
 </body>

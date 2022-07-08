@@ -664,20 +664,12 @@ div.modal-content{
 		//console.log(div_like_cnt);
 		
 		$.ajax({
-			url : "/community/api/insertLike/" + postNo,
+			url : "/api/v1/community/likes/" + postNo,
 			method : "POST",
 			success : function (data, status, jqXHR){
-				
-            	//console.log(data); //응답 body부 데이터
-				//console.log(JSON.stringify(data));
-            	//console.log(status); //"succes"
-            	//console.log(jqXHR)
 				           	
             	const first_key = Object.keys(data)[0];
             	const value = data[first_key];
-            	
-            	//console.log(first_key);
-            	//console.log(value);
             	
             	if(first_key === '좋아요'){
             		heart.attr("class", "bi bi-heart-fill icon");
@@ -690,8 +682,6 @@ div.modal-content{
 				div_like_cnt.html(value); // 좋아요 개수 수정
 			
 			}, error : function(jqXHR, status){
-				//console.log(jqXHR);	// 응답 메시지
-				//console.log(status); // "errror"
 			}
 		});
 	}
@@ -701,15 +691,11 @@ div.modal-content{
 	$("button.action-btn:contains('차단해제')").on("click", function() {
 		
 		const relationUserId = $(this).data("value");
-		//alert(relationUserId);
-		//console.log(relationUserId);
-		
 		const line = $(this).parent().parent(); 
-		//console.log(line);
 		
 		$.ajax({
-			url : "/community/api/deleteBlock/" + relationUserId,
-			method : "POST",
+			url : "/api/v1/community/follow/" + relationUserId,
+			method : "DELETE",
 			success : function(status) {
 				
 				if(status === 1){
@@ -730,7 +716,6 @@ div.modal-content{
 		let currentPage = 2;
 		let maxPage = ${resultPage.maxPage};
 		//let index = ${resultPage.pageUnit};
-
 		
 		let abc = 1;
 		$(window).scroll(function(){
@@ -746,7 +731,7 @@ div.modal-content{
 				function getListPost(){
 								
 					$.ajax({
-						url:"/community/api/getListPost",
+						url:"/api/v1/community/posts",
 						type:"GET",
 						data:{
 							currentPage :currentPage,
@@ -761,13 +746,6 @@ div.modal-content{
 						async: false,
 						success: function(data, status, jqXHR){
 
-							//console.log("success status: "+ status);
-							//console.log("data: " + data);
-							//console.log("jqXHR: "+ jqXHR);
-							//console.log("json/stringify: "+JSON.stringify(data));						
-							//const posts = JSON.stringify(data);	
-							
-									
 							for(let i = 0; i<data.length; i++){
 								
 								let post = data[i];
@@ -832,7 +810,7 @@ div.modal-content{
 									$(postCard).find(".your-class-m").append(div_2);
 
 									$(postCard).find(".post-list-title").text(post.title);
-									$(postCard).find(".post-shortContent").attr("href","/api/v1/community/post/"+post.postNo)
+									$(postCard).find(".post-shortContent").attr("href","/api/v1/community/posts/"+post.postNo)
 									$(postCard).find(".post-shortContent").append(post.shortContent);
 								}else{
 									
@@ -845,7 +823,7 @@ div.modal-content{
 												<img id = "post-img" class="post-image" src="/resources/attachments/\${post.attachments[j].attachmentName}"/>
 											</a>
 											`);
-										$(postCard).find(".post-link").attr("href","/api/v1/community/post/"+post.postNo);
+										$(postCard).find(".post-link").attr("href","/api/v1/community/posts/"+post.postNo);
 									}
 								}
 								
@@ -876,19 +854,12 @@ div.modal-content{
 							slick2('.your-class'+currentPage);								
 						}//success
 						, error: function(status, jqXHR){
-							//console.log("error status: "+ status);
-							//console.log("jqXHR: "+ jqXHR);
 							alert("페이지 로드 실패");
 						}
-						
 					})//jQuery.ajax()
-					
 				currentPage ++;
 				}//getListPost
-				
 		})//window.scroll()
-		
-		
 	});
 	
 	function deletePost(){
@@ -907,7 +878,7 @@ div.modal-content{
 		
 		
 		$.ajax({
-			url : "/community/api/checkReport/"+btn.data("value"),
+			url : "/api/v1/community/posts/reports/check/"+btn.data("value"),
 			method : "GET",
 			dataType : "json",
 			contentType : "application/json; charset=utf-8",
@@ -927,12 +898,11 @@ div.modal-content{
 	
 	// 게시글 신고 넣기
 	function reportPost(e){		
-		//const postNo = $(e).data("value");
-		//const reason = $(e).parent().parent().find("#reason").val();
+		const postNo = $(e).data("value");
+		const reason = $(e).parent().parent().find("#reason").val();
 		
 		const modal = $(e).parent().parent().parent().parent()
 		
-		/*
 		$.ajax({
 			url : "/api/v1/community/posts/reports",
 			method : "POST",
@@ -948,10 +918,10 @@ div.modal-content{
 	        		modal.modal('hide');
 	        	}
 	        }
-		})*/		
-		$(".report-form").submit();
-		toastr.error("게시글 신고가 완료 되었습니다.","게시글 신고 완료",{timeOut:10000})
-		modal.modal('hide');
+		})		
+		//$(".report-form").submit();
+		//toastr.error("게시글 신고가 완료 되었습니다.","게시글 신고 완료",{timeOut:10000})
+		//modal.modal('hide');
 	}
 	
 	// 팔로우 해제
@@ -962,22 +932,12 @@ div.modal-content{
 		let result = confirm(relationUserId+"님의 팔로우를 취소하시겠어요?")
 		if(result){
 			$.ajax({
-				url : "/community/api/deleteFollow/"+relationUserId,
-				method : "POST",
+				url : "/api/v1/community/follow/"+relationUserId,
+				method : "DELETE",
 				success : function(data, status, jqXHR) {
-					
-					//alert(data.userFollowCnt)
-					//alert(data.relationUserFollowerCnt)
-					//console.log("data : " + data);
-					//console.log("status: " + status);
-					//console.log("jqXHR: " + jqXHR);
-					
 					$(e).parent().parent().remove();
 					$(".followTotalCount").text(data.userFollowCnt);
-					
 				}, error : function(jqXHR, status){
-					//console.log(jqXHR);	// 응답 메시지
-					//console.log(status); // "errror"
 				}
 			});
 		}// confirm

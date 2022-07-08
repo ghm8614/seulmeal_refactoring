@@ -14,6 +14,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,7 +35,7 @@ import shop.seulmeal.service.domain.User;
 import shop.seulmeal.service.user.UserService;
 
 @RestController
-@RequestMapping("/community/api/*")
+@RequestMapping("/api/v1/community")
 public class CommunityRestController {
 
 	@Autowired
@@ -53,7 +54,7 @@ public class CommunityRestController {
 		System.out.println(this.getClass());
 	}
 	
-	@GetMapping("getListPost") 
+	@GetMapping("/posts") 
 	public List<Post> getListPost(@RequestParam(required = false, defaultValue = "2") int currentPage,
 			@RequestParam(required = false) String searchKeyword, @RequestParam(required = false) String searchOption ,
 			@RequestParam(required = false) String searchCondition, @RequestParam(required = false) String userId, HttpSession session) {
@@ -128,7 +129,7 @@ public class CommunityRestController {
 	}
 
 	// 댓글 무한스크롤
-	@GetMapping("getListComment/{postNo}") // oo
+	@GetMapping("/comments/{postNo}") // oo
 	public List<Comment> getListComment(@RequestParam(required = false, defaultValue = "2") int currentPage,
 			@PathVariable int postNo) {
 
@@ -142,7 +143,7 @@ public class CommunityRestController {
 	}
 	
 	//Comment
-	@PostMapping("/insertComment") // oo
+	@PostMapping("/comments") // oo
 	public Comment insertComment(@RequestBody Comment comment, HttpSession session) {
 
 		User user = (User)session.getAttribute("user");
@@ -155,30 +156,12 @@ public class CommunityRestController {
 
 	}
 
-	@PostMapping("/deleteComment/{commentNo}") // ^o
+	@DeleteMapping("/comments/{commentNo}") // ^o
 	public void deleteComment(@PathVariable int commentNo) {
 		communityService.deleteComment(commentNo);
 	}
 	
-	/*
-	@GetMapping("/updateComment/{commentNo}") // oo
-	public Comment updateComment(@PathVariable int commentNo) {
-		
-		return communityService.getComment(commentNo); 
-	}*/
-	/*
-	@PatchMapping("/updateComment/{commentNo}") // o^
-	public Comment updateComment(@PathVariable int commentNo, @RequestBody Comment comment) {
-		
-		comment.setCommentNo(commentNo);
-		communityService.updateComment(comment);
-		
-		return communityService.getComment(commentNo); 
-	}*/
-	
-	
-
-	@PostMapping("insertLike/{postNo}") // oo
+	@PostMapping("/likes/{postNo}") // oo
 	public Map<String,Integer> insertLike(@PathVariable String postNo, HttpSession session) {
 
 		Like like = new Like();
@@ -199,27 +182,8 @@ public class CommunityRestController {
 			return map;			
 		}
 	}
-/*
-	@PostMapping("deleteLike/{postNo}") // oo
-	public Post deleteLike(@PathVariable String postNo, HttpSession session) {
 
-		Like like = new Like();
-
-		like.setPostNo(Integer.parseInt(postNo));
-		like.setUserId(((User)session.getAttribute("user")).getUserId());
-
-		// 좋아요 취소
-		communityService.deleteLike(like);
-
-		// 좋아요 취소한 게시글 좋아요 수 return
-		Post post = communityService.getLikePost(Integer.parseInt(postNo));
-
-		System.out.println("/////////" + post);
-		
-		return post;
-	}
-*/
-	@PostMapping("insertFollow/{relationUserId}") // o
+	@PostMapping("/follow/{relationUserId}") // o
 	public Map<String,Object> insertFollow(@PathVariable String relationUserId, HttpSession session) {
 
 		Relation relation = new Relation();
@@ -237,7 +201,7 @@ public class CommunityRestController {
 		return resultMap;
 	}
 	
-	@PostMapping("deleteFollow/{relationUserId}") // o
+	@DeleteMapping("/follow/{relationUserId}") // o
 	public Map<String,Object> deleteFollow(@PathVariable String relationUserId, HttpSession session) {
 
 		System.out.println("relationUserId: "+ relationUserId);
@@ -257,7 +221,7 @@ public class CommunityRestController {
 		return resultMap;
 	}
 
-	@GetMapping("getListFollow") // oo
+	@GetMapping("/followings") // oo
 	public List<Relation> getListFollow(@RequestParam(required = false, defaultValue = "1") int currentPage,
 			@RequestParam(required = false) String searchKeyword, HttpSession session) {
 
@@ -273,7 +237,7 @@ public class CommunityRestController {
 		return (List<Relation>) map.get("followList");
 	}
 
-	@GetMapping("getListFollower") // oo
+	@GetMapping("/followers") // oo
 	public List<Relation> getListFollower(@RequestParam(required = false, defaultValue = "1") int currentPage,
 			@RequestParam(required = false) String searchKeyword,HttpSession session) {
 
@@ -289,7 +253,7 @@ public class CommunityRestController {
 		return (List<Relation>) map.get("followerList");
 	}
 
-	@PostMapping("insertBlock/{relationUserId}") // oo
+	@PostMapping("/block/{relationUserId}") // oo
 	public int insertBlock(@PathVariable String relationUserId, HttpSession session) throws Exception {
 
 		Relation relation = new Relation();
@@ -306,7 +270,7 @@ public class CommunityRestController {
 		return result;
 	}
 
-	@PostMapping("deleteBlock/{relationUserId}")
+	@DeleteMapping("/block/{relationUserId}")
 	public int deleteBlock(@PathVariable String relationUserId, HttpSession session) {
 
 		Relation relation = new Relation();
@@ -324,7 +288,7 @@ public class CommunityRestController {
 	}
 	
 	
-	@GetMapping("getListBlock") // oo
+	@GetMapping("/blocks") // oo
 	public List<Relation> getListBlock(@RequestParam(required = false, defaultValue = "1") int currentPage,
 			@RequestParam(required = false) String searchKeyword, HttpSession session) {
 
@@ -341,13 +305,13 @@ public class CommunityRestController {
 	}
 
 	// 프로필 이미지 삭제		// oo
-	@PostMapping("deleteProfileImage")
+	@DeleteMapping("/profileImage")
 	public String deleteProfileImage(HttpSession session) throws Exception {
 
 		return "/resources/attachments/profile_image/default_profile.jpg";
 	}
 	
-	@PostMapping("insertReportPost") // o
+	@PostMapping("/posts/reports") // o
 	public ResponseEntity<Report> insertReportPost(@RequestBody Report report, @AuthenticationPrincipal User user) {
 		//JSONObject json = new JSONObject();
 		System.out.println("//////: "+ report);
@@ -357,7 +321,7 @@ public class CommunityRestController {
 		return new ResponseEntity<Report>(report, HttpStatus.OK);
 	}
 	
-	@GetMapping("checkReport/{postNo}")
+	@GetMapping("/posts/reports/check/{postNo}")
 	public ResponseEntity<JSONObject> checkReport(@PathVariable String postNo, @AuthenticationPrincipal User user, Report report){
 		JSONObject json = new JSONObject();
 		
@@ -372,7 +336,7 @@ public class CommunityRestController {
 		return new ResponseEntity<JSONObject>(json, HttpStatus.OK);
 	}
 	
-	@GetMapping("deleteReportPost/{postNo}")
+	@DeleteMapping("/posts/reports/{postNo}")
 	public ResponseEntity<Integer> deleteReportPost(@PathVariable String postNo) {
 
 		int r = communityService.deleteReportPost(new Integer(postNo));
