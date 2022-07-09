@@ -740,13 +740,9 @@ button#deleteBlockBtn {
 		if(result){
 			
 			$.ajax({
-				url : "/community/api/insertBlock/"+blockUserId,
+				url : "/api/v1/community/block/"+blockUserId,
 				method : "POST",
 				success : function(data, status, jqXHR) {
-					
-					console.log("data : " + data);
-					console.log("status: " + status);
-					console.log("jqXHR: " + jqXHR);
 					
 					if(data === 1){
 						//alert("차단성공")
@@ -757,13 +753,8 @@ button#deleteBlockBtn {
 					}else{
 						//console.log("차단실패")
 					}
-					
 				},error : function(jqXHR, status){
-					console.log(jqXHR);	// 응답 메시지
-					console.log(status); // "errror"
 				}
-				
-
 			});
 		}
 	}
@@ -771,15 +762,11 @@ button#deleteBlockBtn {
 	// 차단해제
 	function deleteBlock(e){
 		const relationUserId = $(e).data("value");
-		//alert(relationUserId);
-		console.log(relationUserId);
-		
 		const line = $(this).parent().parent(); 
-		console.log(line);
 		
 		$.ajax({
-			url : "/community/api/deleteBlock/" + relationUserId,
-			method : "POST",
+			url : "/api/v1/community/block/" + relationUserId,
+			method : "DELETE",
 			success : function(status) {
 				
 				if(status === 1){
@@ -793,35 +780,7 @@ button#deleteBlockBtn {
 				}
 			}
 		});
-		
 	}
-	
-	/*
-	$("button.action-btn:contains('차단해제')").on("click", function() {
-		
-		const relationUserId = $(this).data("value");
-		//alert(relationUserId);
-		console.log(relationUserId);
-		
-		const line = $(this).parent().parent(); 
-		console.log(line);
-		
-		$.ajax({
-			url : "/community/api/deleteBlock/" + relationUserId,
-			method : "POST",
-			success : function(status) {
-				
-				if(status === 1){
-					alert("차단해제 완료!");
-					line.remove();
-				}else{
-					alert("차단해제 실패..");
-				}
-			}
-		});
-
-	});
-	*/
 
 	// 게시글 무한스크롤
 	$(function(){
