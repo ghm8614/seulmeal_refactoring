@@ -129,7 +129,7 @@ public class CommunityRestController {
 	}
 
 	// 댓글 무한스크롤
-	@GetMapping("/comments/{postNo}") // oo
+	@GetMapping("/comments/{postNo}")
 	public List<Comment> getListComment(@RequestParam(required = false, defaultValue = "2") int currentPage,
 			@PathVariable int postNo) {
 
@@ -143,7 +143,7 @@ public class CommunityRestController {
 	}
 	
 	//Comment
-	@PostMapping("/comments") // oo
+	@PostMapping("/comments")
 	public Comment insertComment(@RequestBody Comment comment, HttpSession session) {
 
 		User user = (User)session.getAttribute("user");
@@ -156,12 +156,12 @@ public class CommunityRestController {
 
 	}
 
-	@DeleteMapping("/comments/{commentNo}") // ^o
+	@DeleteMapping("/comments/{commentNo}")
 	public void deleteComment(@PathVariable int commentNo) {
 		communityService.deleteComment(commentNo);
 	}
 	
-	@PostMapping("/likes/{postNo}") // oo
+	@PostMapping("/likes/{postNo}")
 	public Map<String,Integer> insertLike(@PathVariable String postNo, HttpSession session) {
 
 		Like like = new Like();
@@ -183,7 +183,7 @@ public class CommunityRestController {
 		}
 	}
 
-	@PostMapping("/follow/{relationUserId}") // o
+	@PostMapping("/follow/{relationUserId}")
 	public Map<String,Object> insertFollow(@PathVariable String relationUserId, HttpSession session) {
 
 		Relation relation = new Relation();
@@ -201,7 +201,7 @@ public class CommunityRestController {
 		return resultMap;
 	}
 	
-	@DeleteMapping("/follow/{relationUserId}") // o
+	@DeleteMapping("/follow/{relationUserId}")
 	public Map<String,Object> deleteFollow(@PathVariable String relationUserId, HttpSession session) {
 
 		System.out.println("relationUserId: "+ relationUserId);
@@ -221,7 +221,7 @@ public class CommunityRestController {
 		return resultMap;
 	}
 
-	@GetMapping("/followings") // oo
+	@GetMapping("/followings")
 	public List<Relation> getListFollow(@RequestParam(required = false, defaultValue = "1") int currentPage,
 			@RequestParam(required = false) String searchKeyword, HttpSession session) {
 
@@ -237,7 +237,7 @@ public class CommunityRestController {
 		return (List<Relation>) map.get("followList");
 	}
 
-	@GetMapping("/followers") // oo
+	@GetMapping("/followers")
 	public List<Relation> getListFollower(@RequestParam(required = false, defaultValue = "1") int currentPage,
 			@RequestParam(required = false) String searchKeyword,HttpSession session) {
 
@@ -253,7 +253,7 @@ public class CommunityRestController {
 		return (List<Relation>) map.get("followerList");
 	}
 
-	@PostMapping("/block/{relationUserId}") // oo
+	@PostMapping("/block/{relationUserId}")
 	public int insertBlock(@PathVariable String relationUserId, HttpSession session) throws Exception {
 
 		Relation relation = new Relation();
@@ -288,7 +288,7 @@ public class CommunityRestController {
 	}
 	
 	
-	@GetMapping("/blocks") // oo
+	@GetMapping("/blocks")
 	public List<Relation> getListBlock(@RequestParam(required = false, defaultValue = "1") int currentPage,
 			@RequestParam(required = false) String searchKeyword, HttpSession session) {
 
@@ -304,7 +304,7 @@ public class CommunityRestController {
 		return (List<Relation>) map.get("blockList");
 	}
 
-	// 프로필 이미지 삭제		// oo
+	// 프로필 이미지 삭제	
 	@DeleteMapping("/profileImage")
 	public String deleteProfileImage(HttpSession session) throws Exception {
 

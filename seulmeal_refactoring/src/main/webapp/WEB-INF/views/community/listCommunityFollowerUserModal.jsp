@@ -41,13 +41,13 @@
 										<c:choose>
 											<c:when test="${empty relation.relationUser.profileImage}">
 												<a
-													href="/community/getProfile/${relation.relationUser.userId}"><img
+													href="/api/v1/community/profiles/${relation.relationUser.userId}"><img
 													src="/resources/attachments/profile_image/default_profile.jpg"
 													class="rounded-circle"></a>
 											</c:when>
 											<c:otherwise>
 												<a
-													href="/community/getProfile/${relation.relationUser.userId}"><img
+													href="/api/v1/community/profiles/${relation.relationUser.userId}"><img
 													src="/resources/attachments/profile_image/${relation.relationUser.profileImage}"
 													class="rounded-circle" /></a>
 											</c:otherwise>
@@ -58,11 +58,11 @@
 											<c:choose>
 												<c:when test="${not empty relation.relationUser.nickName}">
 													<a
-														href="/community/getProfile/${relation.relationUser.userId}">${relation.relationUser.nickName}</a>
+														href="/api/v1/community/profiles/${relation.relationUser.userId}">${relation.relationUser.nickName}</a>
 												</c:when>
 												<c:otherwise>
 													<a
-														href="/community/getProfile/${relation.relationUser.userId}">${relation.relationUser.userId}</a>
+														href="/api/v1/community/profiles/${relation.relationUser.userId}">${relation.relationUser.userId}</a>
 												</c:otherwise>
 											</c:choose>
 										</div>

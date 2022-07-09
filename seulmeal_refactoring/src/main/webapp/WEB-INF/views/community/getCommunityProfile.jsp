@@ -652,15 +652,10 @@ button#deleteBlockBtn {
 		console.log(div_like_cnt);
 		
 		$.ajax({
-			url : "/community/api/insertLike/" + postNo,
+			url : "/api/v1/community/likes/" + postNo,
 			method : "POST",
 			success : function (data, status, jqXHR){
 				
-            	console.log(data); //응답 body부 데이터
-				//console.log(JSON.stringify(data));
-            	//console.log(status); //"succes"
-            	//console.log(jqXHR)
-				           	
             	const first_key = Object.keys(data)[0];
             	const value = data[first_key];
             	
@@ -674,17 +669,11 @@ button#deleteBlockBtn {
             		heart.attr("class", "bi bi-heart icon");
             		heart.css("color","black");
             	}
-        
 				div_like_cnt.html(value); // 좋아요 개수 수정
-			
 			}, error : function(jqXHR, status){
-				console.log(jqXHR);	// 응답 메시지
-				console.log(status); // "errror"
 			}
 		});
 	}
-
-	
 	
 	// 팔로우
 	function insertFollowBtn(e){
@@ -692,25 +681,13 @@ button#deleteBlockBtn {
 		//alert("relationUserId: " + relationUserId);
 		
 		$.ajax({
-			url : "/community/api/insertFollow/"+relationUserId,
+			url : "/api/v1/community/follow/"+relationUserId,
 			method : "POST",
 			success : function(data, status, jqXHR) {
-
-				console.log("data : " + data);
-				console.log("status: " + status);
-				console.log("jqXHR: " + jqXHR);
-				
-				console.log(data.userFollowCnt);
-				console.log(data.relationUserFollowerCnt);
-				console.log(data.relationUserFollowerCnt)
-							
 				$("#insertFollowBtn").hide();
 				$("#deleteFollowBtn").show();
 				$("span.followerTotalCount.n").text(data.relationUserFollowerCnt);
-				
 			}, error : function(jqXHR, status){
-				console.log(jqXHR);	// 응답 메시지
-				console.log(status); // "errror"
 			}
 		});
 	};
@@ -723,22 +700,12 @@ button#deleteBlockBtn {
 		let result = confirm(relationUserId+"님의 팔로우를 취소하시겠어요?")
 		if(result){
 			$.ajax({
-				url : "/community/api/deleteFollow/"+relationUserId,
-				method : "POST",
+				url : "/api/v1/community/follow/"+relationUserId,
+				method : "DELETE",
 				success : function(data, status, jqXHR) {
-					
-					//alert(data.userFollowCnt)
-					//alert(data.relationUserFollowerCnt)
-					console.log("data : " + data);
-					console.log("status: " + status);
-					console.log("jqXHR: " + jqXHR);
-					
 					$(e).parent().parent().remove();
 					$(".followTotalCount").text(data.userFollowCnt);
-					
 				}, error : function(jqXHR, status){
-					console.log(jqXHR);	// 응답 메시지
-					console.log(status); // "errror"
 				}
 			});
 		}// confirm
@@ -752,25 +719,13 @@ button#deleteBlockBtn {
 		let result = confirm(relationUserId+"님의 팔로우를 취소하시겠어요?")
 		if(result){
 			$.ajax({
-				url : "/community/api/deleteFollow/"+relationUserId,
-				method : "POST",
+				url : "/api/v1/community/follow/"+relationUserId,
+				method : "DELETE",
 				success : function(data, status, jqXHR) {
-					
-					//alert(data.userFollowCnt)
-					//alert(data.relationUserFollowerCnt)
-					console.log("data : " + data);
-					console.log("status: " + status);
-					console.log("jqXHR: " + jqXHR);
-					
-					//$(e).parent().parent().remove();
-					//$("#insertFollowBtn").text("팔로우");
 					$("#deleteFollowBtn").hide();
 					$("#insertFollowBtn").show();
 					$("span.followerTotalCount").text(data.relationUserFollowerCnt);
-					
 				}, error : function(jqXHR, status){
-					console.log(jqXHR);	// 응답 메시지
-					console.log(status); // "errror"
 				}
 			});
 		}// confirm
