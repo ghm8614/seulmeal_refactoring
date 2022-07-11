@@ -161,4 +161,7 @@ oracleWallet/
 # db 관련정보
 application.yml
 
+# .properties 파일
+env.properties
+
 # End of https://www.toptal.com/developers/gitignore/api/java,windows,eclipse,gradle
