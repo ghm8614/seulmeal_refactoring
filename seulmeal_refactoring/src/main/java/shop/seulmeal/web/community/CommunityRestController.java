@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import lombok.RequiredArgsConstructor;
 import shop.seulmeal.common.Search;
 import shop.seulmeal.service.attachments.AttachmentsService;
 import shop.seulmeal.service.community.CommunityService;
@@ -32,99 +33,94 @@ import shop.seulmeal.service.domain.Post;
 import shop.seulmeal.service.domain.Relation;
 import shop.seulmeal.service.domain.Report;
 import shop.seulmeal.service.domain.User;
+import shop.seulmeal.service.product.ProductService;
 import shop.seulmeal.service.user.UserService;
 
 @RestController
 @RequestMapping("/api/v1/community")
+@RequiredArgsConstructor
 public class CommunityRestController {
 
-	@Autowired
-	private CommunityService communityService;
-	
-	@Autowired
-	private AttachmentsService attachmentsService;
-	
-   @Value("${pageUnit}")
-   private int pageUnit;
-   
-   @Value("${pageSize}")
-   private int pageSize;
+	private final CommunityService communityService;
+	private final AttachmentsService attachmentsService;
 
-	public CommunityRestController() {
-		System.out.println(this.getClass());
-	}
-	
-	@GetMapping("/posts") 
+	@Value("${pageUnit}")
+	private int pageUnit;
+
+	@Value("${pageSize}")
+	private int pageSize;
+
+	@GetMapping("/posts")
 	public List<Post> getListPost(@RequestParam(required = false, defaultValue = "2") int currentPage,
-			@RequestParam(required = false) String searchKeyword, @RequestParam(required = false) String searchOption ,
-			@RequestParam(required = false) String searchCondition, @RequestParam(required = false) String userId, HttpSession session) {
-		
-		System.out.println("RestC : CurrentP : "+ currentPage);
-		
+			@RequestParam(required = false) String searchKeyword, @RequestParam(required = false) String searchOption,
+			@RequestParam(required = false) String searchCondition, @RequestParam(required = false) String userId,
+			HttpSession session) {
+
+		System.out.println("RestC : CurrentP : " + currentPage);
+
 		Search search = new Search();
 		search.setCurrentPage(currentPage);
 		search.setPageSize(pageSize);
 		search.setSearchKeyword(searchKeyword);
 		search.setSearchCondition(searchOption);
 		search.setSearchCondition(searchCondition);
-		
-		User loginUser = (User)session.getAttribute("user");
+
+		User loginUser = (User) session.getAttribute("user");
 
 		List<Relation> relationList = communityService.getAllRelation(loginUser.getUserId());
 		List<Relation> blockList = new ArrayList<>();
-		
-		for (Relation block : relationList) {	
-			if(block.getRelationStatus().equals("1")) {
+
+		for (Relation block : relationList) {
+			if (block.getRelationStatus().equals("1")) {
 				blockList.add(block);
 			}
 		}
-		
+
 		// 메인 게시글 : userId = null (searchKeyword, searchOption 존재)
 		// 내 프로필 게시글 : userId = session (searchKeyword, searchOption 존재x)
-		// 타 프로필 게시글 : userId  (위와 동일)
+		// 타 프로필 게시글 : userId (위와 동일)
 		Map<String, Object> map = communityService.getListPostA(search, userId, blockList);
-		//map.put("search", search);
-		
-		// 좋아요 여부 체크
-		List<Like> likeList =  communityService.checkLikePost(loginUser.getUserId());
+		// map.put("search", search);
 
-		
-		List<Post> postList = (List<Post>)map.get("postList");
-		
+		// 좋아요 여부 체크
+		List<Like> likeList = communityService.checkLikePost(loginUser.getUserId());
+
+		List<Post> postList = (List<Post>) map.get("postList");
+
 		Map<String, Object> attachMap = new HashMap<>();
-				
-		for(Post post : postList) {
+
+		for (Post post : postList) {
 			attachMap.put("postNo", post.getPostNo());
 			post.setAttachments(attachmentsService.getAttachments(attachMap));
-			
-			if(likeList != null) {
+
+			if (likeList != null) {
 				// 좋아요 게시글 상태값 변경
-				for(Like like: likeList) {
-					
-					if(like!=null &&post.getPostNo() == like.getPostNo()) {
+				for (Like like : likeList) {
+
+					if (like != null && post.getPostNo() == like.getPostNo()) {
 						post.setLikeStatus("1");
 					}
 				}
 			}
-			
-			if(post.getAttachments().isEmpty()) {
-				
-				if(post.getContent().length() > 200) {
-					post.setShortContent(post.getContent().substring(0, 201));					
-				}else {
+
+			if (post.getAttachments().isEmpty()) {
+
+				if (post.getContent().length() > 200) {
+					post.setShortContent(post.getContent().substring(0, 201));
+				} else {
 					post.setShortContent(post.getContent());
 				}
-			}else {
-				
-				if(post.getContent().length() > 50) {
-					post.setShortContent(post.getContent().substring(0, 51));					
-				}else {
+			} else {
+
+				if (post.getContent().length() > 50) {
+					post.setShortContent(post.getContent().substring(0, 51));
+				} else {
 					post.setShortContent(post.getContent());
 				}
 			}
 		}
-		System.out.println("/////aaaaa"+postList);
-		System.out.println("/////aaaaa"+search);
+		System.out.println("/////aaaaa" + postList);
+		System.out.println("/////aaaaa" + search);
 		return postList;
 	}
 
@@ -138,21 +134,21 @@ public class CommunityRestController {
 		search.setPageSize(pageSize);
 
 		Map<String, Object> map = communityService.getListcomment(search, postNo);
-		
-		return (List<Comment>)map.get("commentList");
+
+		return (List<Comment>) map.get("commentList");
 	}
-	
-	//Comment
+
+	// Comment
 	@PostMapping("/comments")
 	public Comment insertComment(@RequestBody Comment comment, HttpSession session) {
 
-		User user = (User)session.getAttribute("user");
+		User user = (User) session.getAttribute("user");
 		comment.setUser(user);
-	
+
 		communityService.insertComment(comment);
 		Comment dbComment = communityService.getComment(comment.getCommentNo());
-		
-		return dbComment; 
+
+		return dbComment;
 
 	}
 
@@ -160,62 +156,61 @@ public class CommunityRestController {
 	public void deleteComment(@PathVariable int commentNo) {
 		communityService.deleteComment(commentNo);
 	}
-	
+
 	@PostMapping("/likes/{postNo}")
-	public Map<String,Integer> insertLike(@PathVariable String postNo, HttpSession session) {
+	public Map<String, Integer> insertLike(@PathVariable String postNo, HttpSession session) {
 
 		Like like = new Like();
 		like.setPostNo(Integer.parseInt(postNo));
-		//like.setUserId(userId);
-		like.setUserId(((User)session.getAttribute("user")).getUserId());
+		// like.setUserId(userId);
+		like.setUserId(((User) session.getAttribute("user")).getUserId());
 
-		Map<String,Integer> map = new HashMap<>();
+		Map<String, Integer> map = new HashMap<>();
 		int result = communityService.insertLike(like);
 		Post post = communityService.getLikePost(Integer.parseInt(postNo));
-		
-		
-		if(result == 1) {
+
+		if (result == 1) {
 			map.put("좋아요", post.getLikeCount());
 			return map;
-		}else{
+		} else {
 			map.put("좋아요 취소", post.getLikeCount());
-			return map;			
+			return map;
 		}
 	}
 
 	@PostMapping("/follow/{relationUserId}")
-	public Map<String,Object> insertFollow(@PathVariable String relationUserId, HttpSession session) {
+	public Map<String, Object> insertFollow(@PathVariable String relationUserId, HttpSession session) {
 
 		Relation relation = new Relation();
 		relation.setRelationStatus("0");
-		relation.setUserId(((User)session.getAttribute("user")).getUserId());
+		relation.setUserId(((User) session.getAttribute("user")).getUserId());
 
 		User relationUser = new User();
 		relationUser.setUserId(relationUserId);
 		relation.setRelationUser(relationUser);
-		
-		Map<String,Object> resultMap = communityService.insertFollow(relation);
-		
+
+		Map<String, Object> resultMap = communityService.insertFollow(relation);
+
 		// 1.userFollowCnt
 		// 2.relationUserFollowerCnt
 		return resultMap;
 	}
-	
-	@DeleteMapping("/follow/{relationUserId}")
-	public Map<String,Object> deleteFollow(@PathVariable String relationUserId, HttpSession session) {
 
-		System.out.println("relationUserId: "+ relationUserId);
-		
+	@DeleteMapping("/follow/{relationUserId}")
+	public Map<String, Object> deleteFollow(@PathVariable String relationUserId, HttpSession session) {
+
+		System.out.println("relationUserId: " + relationUserId);
+
 		Relation relation = new Relation();
 		relation.setRelationStatus("0");
-		relation.setUserId(((User)session.getAttribute("user")).getUserId());
-		
+		relation.setUserId(((User) session.getAttribute("user")).getUserId());
+
 		User relationUser = new User();
 		relationUser.setUserId(relationUserId);
 		relation.setRelationUser(relationUser);
 
-		Map<String,Object> resultMap = communityService.deleteFollow(relation);
-			
+		Map<String, Object> resultMap = communityService.deleteFollow(relation);
+
 		// 1.userFollowCnt
 		// 2.relationUserFollowerCnt
 		return resultMap;
@@ -231,15 +226,15 @@ public class CommunityRestController {
 		search.setPageSize(pageSize);
 		search.setSearchKeyword(searchKeyword);
 
-		String userId = ((User)session.getAttribute("user")).getUserId();
-		Map<String, Object> map = communityService.getListFollow(null, userId, "0");//검색없는 	전체목록
+		String userId = ((User) session.getAttribute("user")).getUserId();
+		Map<String, Object> map = communityService.getListFollow(null, userId, "0");// 검색없는 전체목록
 
 		return (List<Relation>) map.get("followList");
 	}
 
 	@GetMapping("/followers")
 	public List<Relation> getListFollower(@RequestParam(required = false, defaultValue = "1") int currentPage,
-			@RequestParam(required = false) String searchKeyword,HttpSession session) {
+			@RequestParam(required = false) String searchKeyword, HttpSession session) {
 
 		Search search = new Search();
 
@@ -247,7 +242,7 @@ public class CommunityRestController {
 		search.setPageSize(pageSize);
 		search.setSearchKeyword(searchKeyword);
 
-		String relationUserId = ((User)session.getAttribute("user")).getUserId();
+		String relationUserId = ((User) session.getAttribute("user")).getUserId();
 		Map<String, Object> map = communityService.getListFollower(search, relationUserId);
 
 		return (List<Relation>) map.get("followerList");
@@ -265,8 +260,8 @@ public class CommunityRestController {
 		relation.setRelationUser(user);
 
 		int result = communityService.insertBlock(relation);
-		System.out.println("/////////"+result);
-		
+		System.out.println("/////////" + result);
+
 		return result;
 	}
 
@@ -276,18 +271,17 @@ public class CommunityRestController {
 		Relation relation = new Relation();
 		relation.setRelationStatus("1");
 		relation.setUserId(((User) session.getAttribute("user")).getUserId());
-		
+
 		User user = new User();
 		user.setUserId(relationUserId);
 		relation.setRelationUser(user);
-		
+
 		int result = communityService.deleteBlock(relation);
-		System.out.println("/////////"+result);
-		
+		System.out.println("/////////" + result);
+
 		return result;
 	}
-	
-	
+
 	@GetMapping("/blocks")
 	public List<Relation> getListBlock(@RequestParam(required = false, defaultValue = "1") int currentPage,
 			@RequestParam(required = false) String searchKeyword, HttpSession session) {
@@ -298,52 +292,53 @@ public class CommunityRestController {
 		search.setPageSize(pageSize);
 		search.setSearchKeyword(searchKeyword);
 
-		String userId = ((User)session.getAttribute("user")).getUserId();
+		String userId = ((User) session.getAttribute("user")).getUserId();
 		Map<String, Object> map = communityService.getListBlock(search, userId, "1");
 
 		return (List<Relation>) map.get("blockList");
 	}
 
-	// 프로필 이미지 삭제	
+	// 프로필 이미지 삭제
 	@DeleteMapping("/profileImage")
 	public String deleteProfileImage(HttpSession session) throws Exception {
 
 		return "/resources/attachments/profile_image/default_profile.jpg";
 	}
-	
+
 	@PostMapping("/posts/reports") // o
 	public ResponseEntity<Report> insertReportPost(@RequestBody Report report, @AuthenticationPrincipal User user) {
-		//JSONObject json = new JSONObject();
-		System.out.println("//////: "+ report);
+		// JSONObject json = new JSONObject();
+		System.out.println("//////: " + report);
 		report.setReporterId(user.getUserId());
 		communityService.insertReportPost(report);
-		
+
 		return new ResponseEntity<Report>(report, HttpStatus.OK);
 	}
-	
+
 	@GetMapping("/posts/reports/check/{postNo}")
-	public ResponseEntity<JSONObject> checkReport(@PathVariable String postNo, @AuthenticationPrincipal User user, Report report){
+	public ResponseEntity<JSONObject> checkReport(@PathVariable String postNo, @AuthenticationPrincipal User user,
+			Report report) {
 		JSONObject json = new JSONObject();
-		
+
 		report.setPostNo(new Integer(postNo));
 		report.setReporterId(user.getUserId());
 		int r = communityService.checkReport(report);
 		json.put("count", r);
-		if(r != 0) {
+		if (r != 0) {
 			return new ResponseEntity<JSONObject>(json, HttpStatus.NO_CONTENT);
 		}
-		
+
 		return new ResponseEntity<JSONObject>(json, HttpStatus.OK);
 	}
-	
+
 	@DeleteMapping("/posts/reports/{postNo}")
 	public ResponseEntity<Integer> deleteReportPost(@PathVariable String postNo) {
 
 		int r = communityService.deleteReportPost(new Integer(postNo));
-		if(r != 0) {
+		if (r != 0) {
 			return new ResponseEntity<Integer>(r, HttpStatus.NO_CONTENT);
 		}
-		
+
 		return new ResponseEntity<Integer>(r, HttpStatus.OK);
 	}
 }
