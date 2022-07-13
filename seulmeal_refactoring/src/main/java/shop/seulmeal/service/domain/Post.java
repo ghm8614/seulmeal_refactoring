@@ -7,6 +7,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,7 +15,6 @@ import lombok.ToString;
 
 @ToString
 @Getter
-@Setter
 @JsonInclude(Include.NON_NULL)
 public class Post {
 	private int postNo;
@@ -35,8 +35,6 @@ public class Post {
 	private String answerStatus;
 	private String status;
 	private String likeStatus;
-	
-	// post媛� comment瑜� 媛�吏�怨� �엳�떎.
 	private List<Comment> comments;
 	private List<Attachments> attachments;
 	
@@ -51,4 +49,12 @@ public class Post {
 	
 	// 할인상품
 	private List<Product> discountProduct;
+
+	// @Setter 대용
+	@Builder 
+	public Post(List<Attachments> attachments, String likeStatus, String shortContent) {
+		this.attachments = attachments;
+		this.likeStatus = likeStatus;
+		this.shortContent = shortContent;
+	}
 }
