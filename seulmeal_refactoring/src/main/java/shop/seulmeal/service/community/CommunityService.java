@@ -16,8 +16,8 @@ public interface CommunityService {
    public int insertPost(Post post);
    public Post getPost(int postNo);
    public Post getPostAdmin(int postNo);
-   public Map<String,Object> getListPost(Search search, String userId);
-   public Map<String,Object> getListPostA(Search search, String userId, List<Relation> blockList);//test
+   //public Map<String,Object> getListPost(Search search, String userId);
+   public Map<String,Object> getListPost(Search search, String loginUserId, String userId);
    public int updatePost(Post post);
    public int deletePost(int postNo);
    

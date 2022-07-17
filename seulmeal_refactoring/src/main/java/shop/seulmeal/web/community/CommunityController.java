@@ -49,7 +49,7 @@ public class CommunityController {
 	private final UserService userService;
 	private final ProductService productService;
 	private final AttachmentsService attachmentsService;
-
+	
 	@Value("${pageUnit}")
 	private int pageUnit;
 
@@ -60,14 +60,14 @@ public class CommunityController {
 	public String communityMain(@RequestParam(required = false) String searchKeyword,
 			@RequestParam(required = false) String searchCondition, Model model, HttpSession session) throws Exception {
 
+		// 비회원 게시판 사용불가
 		User loginUser = (User) session.getAttribute("user");
 
-		// 비회원 게시판 사용불가
 		if (loginUser == null) {
 			return "user/login";
 		}
 
-		// 전체 게시글
+		// 검색조건
 		Search search = new Search();
 		search.setCurrentPage(1);
 		search.setPageSize(pageSize);
@@ -75,38 +75,19 @@ public class CommunityController {
 		search.setSearchCondition(searchCondition);
 
 		// 차단유저 게시글 제외한 전체 게시글
-		// 차단유저 목록 및 count
-		Map<String, Object> blockMap = communityService.getListBlock(null, loginUser.getUserId(), "1");
-		System.out.println("/////////blockMap:" + blockMap);
-
-		Map<String, Object> postMap = communityService.getListPostA(search, null,
-				(List<Relation>) blockMap.get("blockList"));
+		Map<String, Object> postMap = communityService.getListPost(search, loginUser.getUserId(), null);
 		List<Post> postList = (List<Post>) postMap.get("postList");
 
-		// 게시글 무한스크롤 -> maxPage 필요
+		// 게시글 무한스크롤 (maxPage 필요)
 		Page resultPage = new Page(1, (int) postMap.get("postTotalCount"), pageUnit, pageSize);
-		// System.out.println("//postTotalC:"+ postMap.get("postTotalCount"));
-
-		// 좋아요 여부 체크
-		List<Like> likeList = communityService.checkLikePost(loginUser.getUserId());
 
 		Map<String, Object> attachMap = new HashMap<>();
 
 		for (Post post : postList) {
-			// 게시글 사진
+			
 			attachMap.put("postNo", post.getPostNo());
 			post.setAttachments(attachmentsService.getAttachments(attachMap));
-
-			if (likeList != null) {
-				// 좋아요 게시글 상태값 변경
-				for (Like like : likeList) {
-
-					if (like != null && post.getPostNo() == like.getPostNo()) {
-						post.setLikeStatus("1");
-					}
-				}
-			}
-
+			
 			if (post.getAttachments().isEmpty()) {
 				if (post.getContent().length() > 200) {
 					post.setShortContent(post.getContent().substring(0, 201));
@@ -124,6 +105,7 @@ public class CommunityController {
 
 		Map<String, Object> followMap = communityService.getListFollow(null, loginUser.getUserId(), "0");
 		Map<String, Object> followerMap = communityService.getListFollower(null, loginUser.getUserId());
+		Map<String, Object> blockMap = communityService.getListBlock(null, loginUser.getUserId(), "1");
 
 		// model
 		model.addAttribute("postList", postList);
@@ -132,8 +114,6 @@ public class CommunityController {
 		model.addAttribute("followerMap", followerMap);
 		model.addAttribute("blockMap", blockMap);
 		model.addAttribute("search", search);
-
-		System.out.println("///////" + search);
 
 		return "community/communityMain";
 	}
@@ -335,9 +315,9 @@ public class CommunityController {
 			relationStatus = communityService.checkRelation(relation);
 			System.out.println("/////////" + relationStatus);
 
-			postMap = communityService.getListPostA(search, userId, null);
+			postMap = communityService.getListPost(search, userId, null);
 		} else {
-			postMap = communityService.getListPostA(search, ((User) session.getAttribute("user")).getUserId(), null);
+			postMap = communityService.getListPost(search, ((User) session.getAttribute("user")).getUserId(), null);
 
 		}
 

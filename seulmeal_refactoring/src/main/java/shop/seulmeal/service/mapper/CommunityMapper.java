@@ -24,10 +24,10 @@ public interface CommunityMapper {
    public int updatePost(Post post);
    public int deletePost(int postNo);
    
-   public List<Post> getListPost(Map<String,Object> map);//Search(검색+정렬) + userId(myPost)
-   public List<Post> getListPostA(Map<String,Object> map);//Search(검색+정렬) + userId(myPost)
-   public int getPostTotalCount(Map<String,Object> map);//
-   public int getPostTotalCountA(Map<String,Object> map);
+   //public List<Post> getListPost(Map<String,Object> map);//Search(검색+정렬) + userId(myPost)
+   //public int getPostTotalCount(Map<String,Object> map);//
+   public List<Post> getListPost(Map<String,Object> map);
+   public int getPostTotalCount(Map<String,Object> map);
 
    
    //Comment
@@ -66,15 +66,9 @@ public interface CommunityMapper {
    public Relation getRelation(Relation relation);
    public List<Relation> getAllRelation(String userId);
    
-   public List<String> getListFollower(Map<String,Object> map);//
-   public int getFollowerTotalCount(Map<String,Object> map);//
+   public List<String> getListFollower(Map<String,Object> map);
+   public int getFollowerTotalCount(Map<String,Object> map);
 
-   
-   //TestCode
-   public int deletePostAll();
-   public void deleteReportPostAll();
-   public void deleteRelationAll();
-   
    // 신고 체크
    public int checkReport(Report report);
    public String checkRelation(Relation relation);

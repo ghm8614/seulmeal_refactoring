@@ -113,10 +113,27 @@
             WHERE ROWNUM &lt;= #{search.endRowNum})
       WHERE row_seq BETWEEN #{search.startRowNum} AND #{search.endRowNum}
    </select-->
-   
+      
+   <!-- 게시글 전체 수 
+   <select id="getPostTotalCount" parameterType="map" resultType="int">
+      SELECT COUNT(*)
+        FROM(   SELECT p.*, u.nickname, u.profile_image, u.profile_message
+             FROM post p, users u     
+        <where>
+           p.user_id = u.user_id
+           AND post_status = '0'
+           AND status = '0'
+           <if test="userId != null">
+            AND p.user_id = #{userId}   
+         </if>
+           <if test="userId == null and search.searchKeyword != null">
+              AND (title like ('%'||#{search.searchKeyword}||'%') OR content like ('%'||#{search.searchKeyword}||'%'))   
+           </if>
+        </where> ) countTable
+   </select>-->
    
    <!--  차단유저 제외한 게시글 목록 -->
-   <select id="getListPostA" parameterType="map" resultMap="postSelectMap">
+   <select id="getListPost" parameterType="map" resultMap="postSelectMap">
       SELECT *
       FROM   (SELECT inner_table.*, ROWNUM AS row_seq
             FROM   (SELECT p.*, u.nickname, u.profile_image, u.profile_message, u.role
@@ -126,10 +143,10 @@
                           AND post_status = '0'
                           AND status = '0'
                           <if test="blockList != null">
-                                    <foreach item ="block" collection="blockList">
-                                        AND NOT p.user_id = #{block.relationUser.userId}
-                                    </foreach>
-                                </if>
+	                          <foreach item ="block" collection="blockList">
+	                              AND NOT p.user_id = #{block.relationUser.userId}
+	                          </foreach>
+                          </if>
                           <if test="userId != null">
                              AND p.user_id = #{userId}   
                           </if>
@@ -155,7 +172,7 @@
    </select>
    
    <!-- 차단유저 제외 게시글 전체 수 -->
-   <select id="getPostTotalCountA" parameterType="map" resultType="int">
+   <select id="getPostTotalCount" parameterType="map" resultType="int">
       SELECT COUNT(*)
         FROM(   SELECT p.*, u.nickname, u.profile_image, u.profile_message
              FROM post p, users u     
@@ -176,26 +193,6 @@
            </if>
         </where> ) countTable
    </select>
-   
-   
-   <!-- 게시글 전체 수 -->
-   <select id="getPostTotalCount" parameterType="map" resultType="int">
-      SELECT COUNT(*)
-        FROM(   SELECT p.*, u.nickname, u.profile_image, u.profile_message
-             FROM post p, users u     
-        <where>
-           p.user_id = u.user_id
-           AND post_status = '0'
-           AND status = '0'
-           <if test="userId != null">
-            AND p.user_id = #{userId}   
-         </if>
-           <if test="userId == null and search.searchKeyword != null">
-              AND (title like ('%'||#{search.searchKeyword}||'%') OR content like ('%'||#{search.searchKeyword}||'%'))   
-           </if>
-        </where> ) countTable
-   </select>
-   
    
    <update id="updatePost" parameterType="Post">
       UPDATE post
@@ -459,9 +456,6 @@
 
 
    <!-- 4. Like -->
-   
-   <!-- 좋아요 체크 X-->
-   
    <resultMap type="shop.seulmeal.service.domain.Like" id="likeSelectMap">
       <result property="likeNo" column="like_no" jdbcType="NUMERIC" />
       <result property="postNo" column="post_no" jdbcType="NUMERIC" />
@@ -469,7 +463,6 @@
       <result property="commentNo" column="comment_no" jdbcType="VARCHAR" />
       <result property="productNo" column="product_no" jdbcType="DATE" />
    </resultMap>   
-   
    
    <select id="checkLike" parameterType="Like" resultMap="likeSelectMap">
       SELECT * FROM likes
@@ -486,7 +479,6 @@
          user_id = #{userId}
       </where>
    </select>
-
 
    <!-- 좋아요 -->
    <insert id="insertLike" parameterType="Like">
@@ -506,8 +498,6 @@
          post_no = #{postNo}
       </where>
    </update>
-   
-   
    
    <!-- 좋아요 취소 -->
    <delete id="deleteLike" parameterType="Like">

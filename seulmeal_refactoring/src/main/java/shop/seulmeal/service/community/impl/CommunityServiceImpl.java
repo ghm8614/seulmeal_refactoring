@@ -41,6 +41,7 @@ public class CommunityServiceImpl implements CommunityService {
       return communityMapper.getPost(postNo);
    }
 
+   /*
    @Override
    public Map<String, Object> getListPost(Search search, String userId) {
       Map<String, Object> map = new HashMap<String, Object>();
@@ -51,22 +52,53 @@ public class CommunityServiceImpl implements CommunityService {
       map.put("postTotalCount", communityMapper.getPostTotalCount(map));
 
       return map;
-   }
+   }*/
 
    @Override
-   public Map<String, Object> getListPostA(Search search, String userId, List<Relation> blockList) {
+   public Map<String, Object> getListPost(Search search, String loginUserId, String userId) {
 
-      Map<String, Object> map = new HashMap<String, Object>();
+      Map<String, Object> relationMap = new HashMap<String, Object>();
+      Map<String, Object> paramMap = new HashMap<String, Object>();
+      Map<String, Object> resultMap = new HashMap<String, Object>();
+
+      relationMap.put("userId", loginUserId);
+      relationMap.put("relationStatus", "1");
+      paramMap.put("blockList", communityMapper.getListRelation(relationMap));
+      paramMap.put("search", search);
+      paramMap.put("userId", userId);
       
+      List<Post> postList = communityMapper.getListPost(paramMap);
+      resultMap.put("postList", postList);
+      resultMap.put("postTotalCount", communityMapper.getPostTotalCount(paramMap));
+      
+      List<Like> likeList = communityMapper.checkLikePost(loginUserId);
+
+      for(Post post : postList) {
+    	  if (likeList != null) {
+    		  for (Like like : likeList) {
+    			  if (like != null && post.getPostNo() == like.getPostNo()) {
+    				  post.setLikeStatus("1");
+    			  }
+    		  }
+    	  }
+      }
+      
+      return resultMap;
+   }
+   
+   @Override
+   public Map<String, Object> getListBlock(Search search, String userId, String relationStatus) {
+      Map<String, Object> map = new HashMap<String, Object>();
       map.put("search", search);
       map.put("userId", userId);
-      map.put("blockList", blockList);
-      
-      map.put("postList", communityMapper.getListPostA(map));
-      map.put("postTotalCount", communityMapper.getPostTotalCountA(map));
-      
+      map.put("relationStatus", relationStatus);
+
+      map.put("blockList", communityMapper.getListRelation(map));
+      map.put("blockTotalCount", communityMapper.getRelationTotalCount(map));
+
       return map;
    }
+   
    
 
    @Override
@@ -295,18 +327,7 @@ public class CommunityServiceImpl implements CommunityService {
       return communityMapper.insertRelation(relation);
    }
 
-   @Override
-   public Map<String, Object> getListBlock(Search search, String userId, String relationStatus) {
-      Map<String, Object> map = new HashMap<String, Object>();
-      map.put("search", search);
-      map.put("userId", userId);
-      map.put("relationStatus", relationStatus);
 
-      map.put("blockList", communityMapper.getListRelation(map));
-      map.put("blockTotalCount", communityMapper.getRelationTotalCount(map));
-
-      return map;
-   }
 
    @Override
    public int deleteBlock(Relation relation) {   //o
