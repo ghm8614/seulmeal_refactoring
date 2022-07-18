@@ -56,8 +56,9 @@ public class CommunityRestController {
 			@RequestParam(required = false) String searchCondition, @RequestParam(required = false) String userId,
 			HttpSession session) {
 
-		System.out.println("RestC : CurrentP : " + currentPage);
-
+		User loginUser = (User) session.getAttribute("user");
+		
+		// 검색조건
 		Search search = new Search();
 		search.setCurrentPage(currentPage);
 		search.setPageSize(pageSize);
@@ -65,53 +66,23 @@ public class CommunityRestController {
 		search.setSearchCondition(searchOption);
 		search.setSearchCondition(searchCondition);
 
-		User loginUser = (User) session.getAttribute("user");
-
-		List<Relation> relationList = communityService.getAllRelation(loginUser.getUserId());
-		List<Relation> blockList = new ArrayList<>();
-
-		for (Relation block : relationList) {
-			if (block.getRelationStatus().equals("1")) {
-				blockList.add(block);
-			}
-		}
-
-		// 메인 게시글 : userId = null (searchKeyword, searchOption 존재)
-		// 내 프로필 게시글 : userId = session (searchKeyword, searchOption 존재x)
-		// 타 프로필 게시글 : userId (위와 동일)
-		Map<String, Object> map = communityService.getListPostA(search, userId, blockList);
-		// map.put("search", search);
-
-		// 좋아요 여부 체크
-		List<Like> likeList = communityService.checkLikePost(loginUser.getUserId());
-
-		List<Post> postList = (List<Post>) map.get("postList");
-
+		// 차단유저 게시글 제외한 전체 게시글
+		Map<String, Object> postMap = communityService.getListPost(search, loginUser.getUserId(), null);
+		List<Post> postList = (List<Post>) postMap.get("postList");
+		
+		// 게시글 번호에 해당하는 이미지 파일
 		Map<String, Object> attachMap = new HashMap<>();
-
 		for (Post post : postList) {
 			attachMap.put("postNo", post.getPostNo());
 			post.setAttachments(attachmentsService.getAttachments(attachMap));
-
-			if (likeList != null) {
-				// 좋아요 게시글 상태값 변경
-				for (Like like : likeList) {
-
-					if (like != null && post.getPostNo() == like.getPostNo()) {
-						post.setLikeStatus("1");
-					}
-				}
-			}
-
+			
 			if (post.getAttachments().isEmpty()) {
-
 				if (post.getContent().length() > 200) {
 					post.setShortContent(post.getContent().substring(0, 201));
 				} else {
 					post.setShortContent(post.getContent());
 				}
 			} else {
-
 				if (post.getContent().length() > 50) {
 					post.setShortContent(post.getContent().substring(0, 51));
 				} else {
@@ -119,8 +90,6 @@ public class CommunityRestController {
 				}
 			}
 		}
-		System.out.println("/////aaaaa" + postList);
-		System.out.println("/////aaaaa" + search);
 		return postList;
 	}
 
