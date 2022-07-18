@@ -81,10 +81,9 @@ public class CommunityController {
 		// 게시글 무한스크롤 (maxPage 필요)
 		Page resultPage = new Page(1, (int) postMap.get("postTotalCount"), pageUnit, pageSize);
 
+		// 게시글 번호에 해당하는 이미지 파일
 		Map<String, Object> attachMap = new HashMap<>();
-
 		for (Post post : postList) {
-			
 			attachMap.put("postNo", post.getPostNo());
 			post.setAttachments(attachmentsService.getAttachments(attachMap));
 			
@@ -290,62 +289,50 @@ public class CommunityController {
 			throws Exception {
 
 		User loginUser = (User) session.getAttribute("user");
-
 		User profileUser = userService.getProfile(userId);
-
-		// default : 본인 게시글
-		boolean isMine = true;
-		String relationStatus = null;
-		Map<String, Object> postMap = null;
 
 		Search search = new Search();
 		search.setCurrentPage(1);
 		search.setPageSize(pageSize);
 
-		// 타인 게시글
-		if (!((User) session.getAttribute("user")).getUserId().equals(userId)) {
+		// 본인 프로필 (default)
+		boolean isMine = true;
+		String relationStatus = null;
+		Map<String, Object> postMap = null;
+
+		// 타인 프로필
+		if (!(loginUser.getUserId().equals(userId))) {
+			
 			isMine = false;
-
-			relation.setUserId(((User) session.getAttribute("user")).getUserId());
-
 			User relationUser = new User();
+			relation.setUserId(loginUser.getUserId());
 			relationUser.setUserId(userId);
 			relation.setRelationUser(relationUser);
-
 			relationStatus = communityService.checkRelation(relation);
-			System.out.println("/////////" + relationStatus);
 
-			postMap = communityService.getListPost(search, userId, null);
+			postMap = communityService.getListPost(search, null, userId);
 		} else {
-			postMap = communityService.getListPost(search, ((User) session.getAttribute("user")).getUserId(), null);
-
+			postMap = communityService.getListPost(search, loginUser.getUserId(), loginUser.getUserId());
 		}
 
+		// 게시글 무한스크롤 (maxPage 필요)
 		Page resultPage = new Page(1, (int) postMap.get("postTotalCount"), pageUnit, pageSize);
 
-		// 팔로우, 팔로워 목록 및 count
-		Map<String, Object> followMap = communityService.getListFollow(null, userId, "0");
-		Map<String, Object> followerMap = communityService.getListFollower(null, userId);
-
-		// 차단유저 목록
-		Map<String, Object> blockMap = communityService.getListBlock(null, userId, "1");
-
-		Map<String, Object> attachMap = new HashMap<>();
+		// 게시글 번호에 해당하는 이미지 파일
 		List<Post> postList = (List<Post>) postMap.get("postList");
+		Map<String, Object> attachMap = new HashMap<>();
 
 		for (Post post : postList) {
 			attachMap.put("postNo", post.getPostNo());
 			post.setAttachments(attachmentsService.getAttachments(attachMap));
 
 			if (post.getAttachments().isEmpty()) {
-
 				if (post.getContent().length() > 200) {
 					post.setShortContent(post.getContent().substring(0, 201));
 				} else {
 					post.setShortContent(post.getContent());
 				}
 			} else {
-
 				if (post.getContent().length() > 50) {
 					post.setShortContent(post.getContent().substring(0, 51));
 				} else {
@@ -353,12 +340,17 @@ public class CommunityController {
 				}
 			}
 		}
+		
+		// 팔로우, 팔로워, 차단 목록
+		Map<String, Object> followMap = communityService.getListFollow(null, userId, "0");
+		Map<String, Object> followerMap = communityService.getListFollower(null, userId);
+		Map<String, Object> blockMap = communityService.getListBlock(null, userId, "1");
 
 		// model
 		model.addAttribute("isMine", isMine);
-		model.addAttribute("relationStatus", relationStatus);// 0:팔로우관계, null:관계x
-		model.addAttribute("profileUser", userService.getProfile(userId));
-		model.addAttribute("postList", (List<Post>) postMap.get("postList"));
+		model.addAttribute("relationStatus", relationStatus);
+		model.addAttribute("profileUser", profileUser);
+		model.addAttribute("postList", postList);
 		model.addAttribute("resultPage", resultPage);
 		model.addAttribute("followMap", followMap);
 		model.addAttribute("followerMap", followerMap);
