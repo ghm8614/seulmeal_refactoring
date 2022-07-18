@@ -126,12 +126,11 @@ public class CommunityController {
 	public String insertPost(@ModelAttribute Post post, MultipartFile[] uploadfile, Attachments attachments,
 			HttpSession session) throws IllegalStateException, IOException {
 
-		post.setUser(((User) session.getAttribute("user")));
-		System.out.println("///////////session 검증 : " + ((User) session.getAttribute("user")));
-
+		User loginUser = (User) session.getAttribute("user");
+		post.setUser(loginUser);
 		communityService.insertPost(post);
 
-		// 첨부파일 없을 경우, 유효성 체크
+		// 첨부파일 유효성 체크
 		if (uploadfile.length > 0) {
 			attachments.setPostNo(Integer.toString(post.getPostNo()));
 			attachmentsService.insertAttachments(uploadfile, attachments);
