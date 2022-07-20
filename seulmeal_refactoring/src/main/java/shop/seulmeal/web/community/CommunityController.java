@@ -191,7 +191,7 @@ public class CommunityController {
 			Attachments attachments, String deleteAttachmentNo, String deleteAttachmentName)
 			throws IllegalStateException, IOException {
 
-		// db와 폴더 첨부파일 삭제
+		// DB와 플젝폴더 첨부파일 삭제
 		attachmentsService.deleteAttachments(deleteAttachmentNo, deleteAttachmentName);
 
 		// 새로 추가한 첨부파일 등록, 유효성 체크
@@ -200,7 +200,6 @@ public class CommunityController {
 			attachmentsService.insertAttachments(uploadfile, attachments);
 		}
 
-		// post 업데이트
 		communityService.updatePost(post);
 
 		return "redirect:/api/v1/community/posts/" + postNo;

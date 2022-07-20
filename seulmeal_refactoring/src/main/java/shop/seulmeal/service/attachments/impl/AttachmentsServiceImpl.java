@@ -21,10 +21,10 @@ import shop.seulmeal.service.mapper.AttachmentsMapper;
 @Service("attachmentsServiceImpl")
 public class AttachmentsServiceImpl implements AttachmentsService {
 	
-	//private String path =System.getProperty("user.dir")+"/src/main/webapp/resources/attachments/";
+	private String path =System.getProperty("user.dir")+"/src/main/webapp/resources/attachments/";
 	//private String path = "/home/tomcat/apache-tomcat-9.0.64/webapps/seulmeal/resources/attachments/";
-	private String path ="./src/main/webapp/resources/attachments/";
-//	private String path ="C:/Users/GHM/Desktop/mainPJT/";
+	//private String path ="./src/main/webapp/resources/attachments/";
+	//private String path ="C:/Users/GHM/Desktop/mainPJT/";
 	
 	
 	@Autowired
