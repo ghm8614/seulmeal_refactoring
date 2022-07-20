@@ -171,20 +171,16 @@ public class CommunityController {
 		return "community/getCommunityPost";
 	}
 
-	@GetMapping("/posts/update/{postNo}") // o
+	@GetMapping("/posts/update/{postNo}")
 	public String updatePost(@PathVariable int postNo, Model model) {
 
-		// post 가져오기
 		Post post = communityService.getPost(postNo);
 
-		// 첨부파일 가져오기
-		Map<String, Object> map = new HashMap<>();
-		map.put("postNo", postNo);
+		// 해당 post의 첨부파일
+		Map<String, Object> attachMap = new HashMap<>();
+		attachMap.put("postNo", postNo);
+		post.setAttachments(attachmentsService.getAttachments(attachMap));
 
-		// post 도메인에 첨부파일 넣기
-		post.setAttachments(attachmentsService.getAttachments(map));
-
-		// model
 		model.addAttribute("post", post);
 
 		return "community/updateCommunityPost";
