@@ -142,28 +142,25 @@ public class CommunityController {
 	@GetMapping("/posts/{postNo}")
 	public String getPost(@PathVariable int postNo, Model model, HttpSession session) {
 
-		// 해당 post
+		User loginUser = (User)session.getAttribute("user");
 		Post post = communityService.getPost(postNo);
-		System.out.println("//////" + post.getContent());
 
 		// 타인 게시글 조회시에만, 조회수 증가
-		if (!((User) session.getAttribute("user")).getUserId().equals(post.getUser().getUserId())) {
+		if (!(loginUser.getUserId().equals(post.getUser().getUserId()))) {
 			communityService.postViewsUp(postNo);
 		}
 
 		// 해당 post의 첨부파일
-		Map<String, Object> map02 = new HashMap<>();
-		map02.put("postNo", postNo);
-		List<Attachments> attachmentList = attachmentsService.getAttachments(map02);
+		Map<String, Object> attachMap = new HashMap<>();
+		attachMap.put("postNo", postNo);
+		List<Attachments> attachmentList = attachmentsService.getAttachments(attachMap);
 
-		// 댓글 목록 (무한스크롤 -> maxPage 필요)
+		// 댓글 (무한스크롤, maxPage 필요)
 		Search search = new Search();
 		search.setCurrentPage(1);
 		search.setPageSize(pageSize);
 		Map<String, Object> map = communityService.getListcomment(search, postNo);
 		Page resultPage = new Page(1, (int) map.get("commentTotalCount"), pageUnit, pageSize);
-		System.out.println("///" + map.get("commentTotalCount"));
-		System.out.println("///" + resultPage);
 
 		// model
 		model.addAttribute("post", post);
@@ -171,7 +168,6 @@ public class CommunityController {
 		model.addAttribute("commentList", (List<Comment>) map.get("commentList"));
 		model.addAttribute("resultPage", resultPage);
 
-		System.out.println("////////" + attachmentList);
 		return "community/getCommunityPost";
 	}
 
