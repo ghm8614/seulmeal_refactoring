@@ -349,10 +349,11 @@ public class CommunityController {
 		return "/community/getCommunityProfile";
 	}
 
-	@GetMapping("/profile") // oo
+	@GetMapping("/profile")
 	public String updateProfile(HttpSession session, Model model) throws Exception {
 
 		model.addAttribute("foodcategoryList", productService.getListFoodCategory());
+		
 		return "/community/updateCommunityProfile";
 	}
 

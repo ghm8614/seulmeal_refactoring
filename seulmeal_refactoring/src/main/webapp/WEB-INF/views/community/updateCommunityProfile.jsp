@@ -129,12 +129,13 @@
 				<div class="col-sm-5 control-label"
 					style="margin-bottom: 5px; font-size: 20px;">선호음식 카테고리</div>
 				<c:forEach var="foodcategory" items="${foodcategoryList}">
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" name="foodcategory"
-							value="${foodcategory.name}" onclick="count_check(this);"
-							type="checkbox"> <label class="form-check-label"
-							for="inlineCheckbox1">${foodcategory.name}</label>
-					</div>
+					<c:set var="i" value="${i+1}"/>
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" id="inlineCheckbox${i}" name="foodcategory"
+								value="${foodcategory.name}" onclick="count_check(this);"
+								type="checkbox" > <label class="form-check-label"
+								for="inlineCheckbox${i}">${foodcategory.name}</label>
+						</div>
 				</c:forEach>
 			</div>
 
@@ -157,17 +158,9 @@
          function() {
             
             $.ajax({
-               url : "/community/api/deleteProfileImage",
-               method : "POST",
+               url : "/api/v1/community/profileImage",
+               method : "DELETE",
                success : function(data,status) {
-                  
-                  //(status : sucess or err)
-                  //alert("status: " + status);
-                  console.log("status: " + status);
-                  
-                  //alert("data : " + data);
-                  console.log("data : " + data);
-
                   $("#img_section").attr("src",data);
                   console.log($("#img_section"));
                   
@@ -177,6 +170,22 @@
             });
          });
 
+   /*
+   // 
+   $(document).ready(function(){
+	   const foodCategoryName1 = '${sessionScope.user.foodCategoryName1}'
+	   const foodCategoryName2 = '${sessionScope.user.foodCategoryName2}'
+	   const foodCategoryName3 = '${sessionScope.user.foodCategoryName3}'
+	   var foodCateValue = $(".form-check-input").val()
+	   
+	   var chkBox = document.getElementsByName("foodcategory");
+	   console.log(foodCategoryName1)
+	   console.log(foodCategoryName2)
+	   console.log(foodCategoryName3)
+	   console.log(foodCateValue)
+   });
+   */
+   
 
 // 체크박스 3개만 선택가능
 function count_check(obj){
@@ -267,7 +276,6 @@ $(function(){
     
      $(".profile-form").submit();
 }
-   
    
    
 </script>
