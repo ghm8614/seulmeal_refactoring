@@ -213,67 +213,6 @@ public class CommunityController {
 		return "redirect:/api/v1/community/";
 	}
 
-	@GetMapping("/post/reports/{postNo}")
-	public String getPostAdmin(@PathVariable int postNo, Model model, HttpSession session) {
-
-		// 해당 post
-		Post post = communityService.getPostAdmin(postNo);
-
-		// 타인 게시글 조회시에만, 조회수 증가
-		if (!((User) session.getAttribute("user")).getUserId().equals(post.getUser().getUserId())) {
-			communityService.postViewsUp(postNo);
-		}
-
-		// 해당 post의 첨부파일
-		Map<String, Object> map02 = new HashMap<>();
-		map02.put("postNo", postNo);
-		List<Attachments> attachmentList = attachmentsService.getAttachments(map02);
-
-		// 댓글 목록 (무한스크롤 -> maxPage 필요)
-		Search search = new Search();
-		search.setCurrentPage(1);
-		search.setPageSize(pageSize);
-		Map<String, Object> map = communityService.getListcomment(search, postNo);
-		Page resultPage = new Page(1, (int) map.get("commentTotalCount"), pageUnit, pageSize);
-		System.out.println("///" + map.get("commentTotalCount"));
-		System.out.println("///" + resultPage);
-
-		// model
-		model.addAttribute("post", post);
-		model.addAttribute("attachmentList", attachmentList);
-		model.addAttribute("commentList", (List<Comment>) map.get("commentList"));
-		model.addAttribute("resultPage", resultPage);
-
-		System.out.println("////////" + attachmentList);
-		return "community/getCommunityPost";
-	}
-
-	@GetMapping("/posts/reports/{currentPage}") // o
-	public String getListReportPost(@PathVariable(value = "currentPage", required = false) Integer currentPage,
-			Model model) {
-
-		System.out.println("type : " + currentPage.getClass().getTypeName());
-		System.out.println("값 : " + currentPage);
-
-		Search search = new Search();
-		if (currentPage == 0) {
-			currentPage = 1;
-		}
-		search.setCurrentPage(currentPage);
-		search.setPageSize(pageSize);
-		System.out.println("////////" + search);
-
-		Map<String, Object> map = communityService.getListReportPost(search);
-		Page resultPage = new Page(search.getCurrentPage(), (int) map.get("reportTotalCount"), pageUnit, pageSize);
-		System.out.println("////////" + resultPage);
-
-		model.addAttribute("reportList", (List<Report>) map.get("reportList"));
-		model.addAttribute("resultPage", resultPage);
-		// search 필요x
-
-		return "/community/listCommunityReportPost";
-	}
-
 	@GetMapping("/profiles/{userId}")
 	public String getProfile(@PathVariable String userId, Model model, HttpSession session, Relation relation)
 			throws Exception {
@@ -357,15 +296,14 @@ public class CommunityController {
 		return "/community/updateCommunityProfile";
 	}
 
-	@PutMapping("/profile") // oo
+	@PutMapping("/profile")
 	public String updateProfile(MultipartFile imageFile, @ModelAttribute User user, String[] foodcategory,
 			HttpSession session, Model model) throws Exception {
 
 		// 프로필 사진
 		String imageFilePath = null;
 		String path = System.getProperty("user.dir") + "/src/main/webapp/resources/attachments/profile_image";
-		// String path =
-		// "/home/tomcat/apache-tomcat-9.0.64/webapps/seulmeal/resources/attachments/profile_image";
+		// String path = "/home/tomcat/apache-tomcat-9.0.64/webapps/seulmeal/resources/attachments/profile_image";
 		File file = new File(path);
 
 		if (!file.exists()) {
@@ -418,5 +356,51 @@ public class CommunityController {
 
 		return "redirect:/api/v1/community/profiles/" + user.getUserId();
 	}
+	
+	@GetMapping("/post/reports/{postNo}")
+	public String getPostAdmin(@PathVariable int postNo, Model model, HttpSession session) {
 
+		Post post = communityService.getPostAdmin(postNo);
+
+		// 해당 post의 첨부파일
+		Map<String, Object> attachMap = new HashMap<>();
+		attachMap.put("postNo", postNo);
+		List<Attachments> attachmentList = attachmentsService.getAttachments(attachMap);
+
+		// 댓글 (무한스크롤, maxPage 필요)
+		Search search = new Search();
+		search.setCurrentPage(1);
+		search.setPageSize(pageSize);
+		Map<String, Object> map = communityService.getListcomment(search, postNo);
+		Page resultPage = new Page(1, (int) map.get("commentTotalCount"), pageUnit, pageSize);
+
+		// model
+		model.addAttribute("post", post);
+		model.addAttribute("attachmentList", attachmentList);
+		model.addAttribute("commentList", (List<Comment>) map.get("commentList"));
+		model.addAttribute("resultPage", resultPage);
+
+		return "community/getCommunityPost";
+	}
+
+	@GetMapping("/posts/reports/{currentPage}")
+	public String getListReportPost(@PathVariable(value = "currentPage", required = false) Integer currentPage,
+			Model model) {
+
+		Search search = new Search();
+		if (currentPage == 0) {
+			currentPage = 1;
+		}
+		search.setCurrentPage(currentPage);
+		search.setPageSize(pageSize);
+
+		Map<String, Object> map = communityService.getListReportPost(search);
+		Page resultPage = new Page(search.getCurrentPage(), (int) map.get("reportTotalCount"), pageUnit, pageSize);
+
+		// model
+		model.addAttribute("reportList", (List<Report>) map.get("reportList"));
+		model.addAttribute("resultPage", resultPage);
+
+		return "/community/listCommunityReportPost";
+	}
 }
