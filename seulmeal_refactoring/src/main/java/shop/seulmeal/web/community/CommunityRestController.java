@@ -1,6 +1,5 @@
 package shop.seulmeal.web.community;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,9 +7,7 @@ import java.util.Map;
 import javax.servlet.http.HttpSession;
 
 import org.json.simple.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -33,8 +30,6 @@ import shop.seulmeal.service.domain.Post;
 import shop.seulmeal.service.domain.Relation;
 import shop.seulmeal.service.domain.Report;
 import shop.seulmeal.service.domain.User;
-import shop.seulmeal.service.product.ProductService;
-import shop.seulmeal.service.user.UserService;
 
 @RestController
 @RequestMapping("/api/v1/community")
@@ -93,7 +88,6 @@ public class CommunityRestController {
 		return postList;
 	}
 
-	// 댓글 무한스크롤
 	@GetMapping("/comments/{postNo}")
 	public List<Comment> getListComment(@RequestParam(required = false, defaultValue = "2") int currentPage,
 			@PathVariable int postNo) {
@@ -107,18 +101,16 @@ public class CommunityRestController {
 		return (List<Comment>) map.get("commentList");
 	}
 
-	// Comment
 	@PostMapping("/comments")
 	public Comment insertComment(@RequestBody Comment comment, HttpSession session) {
 
-		User user = (User) session.getAttribute("user");
-		comment.setUser(user);
+		User loginUser = (User) session.getAttribute("user");
+		comment.setUser(loginUser);
 
 		communityService.insertComment(comment);
 		Comment dbComment = communityService.getComment(comment.getCommentNo());
 
 		return dbComment;
-
 	}
 
 	@DeleteMapping("/comments/{commentNo}")
@@ -127,24 +119,22 @@ public class CommunityRestController {
 	}
 
 	@PostMapping("/likes/{postNo}")
-	public Map<String, Integer> insertLike(@PathVariable String postNo, HttpSession session) {
+	public Map<String, Integer> insertLike(@PathVariable int postNo, HttpSession session) {
 
 		Like like = new Like();
-		like.setPostNo(Integer.parseInt(postNo));
-		// like.setUserId(userId);
 		like.setUserId(((User) session.getAttribute("user")).getUserId());
+		like.setPostNo(postNo);
 
 		Map<String, Integer> map = new HashMap<>();
 		int result = communityService.insertLike(like);
-		Post post = communityService.getLikePost(Integer.parseInt(postNo));
+		Post post = communityService.getLikePost(postNo);
 
 		if (result == 1) {
 			map.put("좋아요", post.getLikeCount());
-			return map;
 		} else {
 			map.put("좋아요 취소", post.getLikeCount());
-			return map;
 		}
+		return map;
 	}
 
 	@PostMapping("/follow/{relationUserId}")
