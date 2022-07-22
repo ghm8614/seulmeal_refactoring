@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -47,19 +48,13 @@ public class CommunityRestController {
 
 	@GetMapping("/posts")
 	public List<Post> getListPost(@RequestParam(required = false, defaultValue = "2") int currentPage,
-			@RequestParam(required = false) String searchKeyword, @RequestParam(required = false) String searchOption,
-			@RequestParam(required = false) String searchCondition, @RequestParam(required = false) String userId,
+			@ModelAttribute Search search, @RequestParam(required = false) String userId,
 			HttpSession session) {
 
 		User loginUser = (User) session.getAttribute("user");
 		
-		// 검색조건
-		Search search = new Search();
 		search.setCurrentPage(currentPage);
 		search.setPageSize(pageSize);
-		search.setSearchKeyword(searchKeyword);
-		search.setSearchCondition(searchOption);
-		search.setSearchCondition(searchCondition);
 
 		// 차단유저 게시글 제외한 전체 게시글
 		Map<String, Object> postMap = communityService.getListPost(search, loginUser.getUserId(), null);
@@ -150,15 +145,11 @@ public class CommunityRestController {
 
 		Map<String, Object> resultMap = communityService.insertFollow(relation);
 
-		// 1.userFollowCnt
-		// 2.relationUserFollowerCnt
 		return resultMap;
 	}
 
 	@DeleteMapping("/follow/{relationUserId}")
 	public Map<String, Object> deleteFollow(@PathVariable String relationUserId, HttpSession session) {
-
-		System.out.println("relationUserId: " + relationUserId);
 
 		Relation relation = new Relation();
 		relation.setRelationStatus("0");
@@ -170,8 +161,6 @@ public class CommunityRestController {
 
 		Map<String, Object> resultMap = communityService.deleteFollow(relation);
 
-		// 1.userFollowCnt
-		// 2.relationUserFollowerCnt
 		return resultMap;
 	}
 
@@ -185,8 +174,8 @@ public class CommunityRestController {
 		search.setPageSize(pageSize);
 		search.setSearchKeyword(searchKeyword);
 
-		String userId = ((User) session.getAttribute("user")).getUserId();
-		Map<String, Object> map = communityService.getListFollow(null, userId, "0");// 검색없는 전체목록
+		String loginUserId = ((User) session.getAttribute("user")).getUserId();
+		Map<String, Object> map = communityService.getListFollow(null, loginUserId, "0");// 검색없는 전체목록
 
 		return (List<Relation>) map.get("followList");
 	}
@@ -219,7 +208,6 @@ public class CommunityRestController {
 		relation.setRelationUser(user);
 
 		int result = communityService.insertBlock(relation);
-		System.out.println("/////////" + result);
 
 		return result;
 	}
@@ -236,7 +224,6 @@ public class CommunityRestController {
 		relation.setRelationUser(user);
 
 		int result = communityService.deleteBlock(relation);
-		System.out.println("/////////" + result);
 
 		return result;
 	}
@@ -257,17 +244,15 @@ public class CommunityRestController {
 		return (List<Relation>) map.get("blockList");
 	}
 
-	// 프로필 이미지 삭제
 	@DeleteMapping("/profileImage")
 	public String deleteProfileImage(HttpSession session) throws Exception {
 
 		return "/resources/attachments/profile_image/default_profile.jpg";
 	}
 
-	@PostMapping("/posts/reports") // o
+	@PostMapping("/posts/reports")
 	public ResponseEntity<Report> insertReportPost(@RequestBody Report report, @AuthenticationPrincipal User user) {
 		// JSONObject json = new JSONObject();
-		System.out.println("//////: " + report);
 		report.setReporterId(user.getUserId());
 		communityService.insertReportPost(report);
 
