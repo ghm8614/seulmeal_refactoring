@@ -32,6 +32,11 @@ public class CommunityServiceImpl implements CommunityService {
 	public Post getPost(int postNo) {
 		return communityMapper.getPost(postNo);
 	}
+	
+	@Override
+	public Post getPostAdmin(int postNo) {
+		return communityMapper.getPostAdmin(postNo);
+	}
 
 	@Override
 	public Map<String, Object> getListPost(Search search, @RequestParam(required = false) String loginUserId,
@@ -70,19 +75,6 @@ public class CommunityServiceImpl implements CommunityService {
 	}
 
 	@Override
-	public Map<String, Object> getListBlock(Search search, String userId, String relationStatus) {
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("search", search);
-		map.put("userId", userId);
-		map.put("relationStatus", relationStatus);
-
-		map.put("blockList", communityMapper.getListRelation(map));
-		map.put("blockTotalCount", communityMapper.getRelationTotalCount(map));
-
-		return map;
-	}
-
-	@Override
 	public int updatePost(Post post) {
 		return communityMapper.updatePost(post);
 	}
@@ -90,6 +82,11 @@ public class CommunityServiceImpl implements CommunityService {
 	@Override
 	public int deletePost(int postNo) {
 		return communityMapper.deletePost(postNo);
+	}
+	
+	@Override
+	public int postViewsUp(int postNo) {
+		return communityMapper.postViewsUp(postNo);
 	}
 
 	@Override
@@ -141,23 +138,24 @@ public class CommunityServiceImpl implements CommunityService {
 		communityMapper.deletePost(postNo);
 		return communityMapper.deleteReportPost(postNo);
 	}
+	
+	@Override
+	public int checkReport(Report report) {
+		return communityMapper.checkReport(report);
+	}
 
 	@Override
 	public int insertLike(Like like) {
-
 		// userId가 like 눌렀는지 체크
 		Like dbLike = communityMapper.checkLike(like);
 
 		// 좋아요
 		if (dbLike == null) {
-
 			communityMapper.postLikeCountUp(like.getPostNo());
 			communityMapper.insertLike(like);
 			return 1;
 
 		} else { // 좋아요 취소
-
-			System.out.println("///////이미 좋아요 눌렀음, 좋아요 취소");
 			communityMapper.postLikeCountDown(dbLike.getPostNo());
 			communityMapper.deleteLike(dbLike);
 			return -1;
@@ -168,10 +166,14 @@ public class CommunityServiceImpl implements CommunityService {
 	public Post getLikePost(int postNo) {
 		return communityMapper.getPost(postNo);
 	}
+	
+	@Override
+	public List<Like> checkLikePost(String userId) {
+		return communityMapper.checkLikePost(userId);
+	}
 
 	@Override
 	public Map<String, Object> insertFollow(Relation relation) {
-
 		Relation dbRelation = communityMapper.getRelation(relation);
 
 		if (dbRelation == null) {
@@ -183,13 +185,10 @@ public class CommunityServiceImpl implements CommunityService {
 		map.put("relationUserId", relation.getRelationUser().getUserId());
 		map.put("relationStatus", relation.getRelationStatus());
 
-		// 내 팔로우 개수 -1
+		// 내 팔로우 수 +1
 		int userFollowCnt = communityMapper.getRelationTotalCount(map);
-		// 상대 팔로워 개수 -1
+		// 상대 팔로워 수 +1
 		int relationUserFollowerCnt = communityMapper.getFollowerTotalCount(map);
-
-		System.out.println("userFC:" + userFollowCnt);
-		System.out.println("relationUserFC:" + relationUserFollowerCnt);
 
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("userFollowCnt", userFollowCnt);
@@ -199,13 +198,10 @@ public class CommunityServiceImpl implements CommunityService {
 	}
 
 	@Override
-	public Map<String, Object> deleteFollow(Relation relation) { // o
-		System.out.println("relation: " + relation);
-
+	public Map<String, Object> deleteFollow(Relation relation) { 
 		Relation dbRelation = communityMapper.getRelation(relation);
 
 		if (dbRelation != null & dbRelation.getRelationStatus().equals("0")) {
-			System.out.println("db 존재 o, delete follow!");
 			communityMapper.deleteRelation(dbRelation);
 		}
 
@@ -214,13 +210,10 @@ public class CommunityServiceImpl implements CommunityService {
 		map.put("relationUserId", relation.getRelationUser().getUserId());
 		map.put("relationStatus", relation.getRelationStatus());
 
-		// 내 팔로우 개수 -1
+		// 내 팔로우 수 -1
 		int userFollowCnt = communityMapper.getRelationTotalCount(map);
-		// 상대 팔로워 개수 -1
+		// 상대 팔로워 수 -1
 		int relationUserFollowerCnt = communityMapper.getFollowerTotalCount(map);
-
-		System.out.println("userFC:" + userFollowCnt);
-		System.out.println("relationUserFC:" + relationUserFollowerCnt);
 
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("userFollowCnt", userFollowCnt);
@@ -260,6 +253,11 @@ public class CommunityServiceImpl implements CommunityService {
 	}
 
 	@Override
+	public List<Relation> getAllRelation(String userId) {
+		return communityMapper.getAllRelation(userId);
+	}
+	
+	@Override
 	public int insertBlock(Relation relation) {
 
 		Relation dbRelation = communityMapper.getRelation(relation);
@@ -267,21 +265,30 @@ public class CommunityServiceImpl implements CommunityService {
 		if (dbRelation != null) {
 			if (dbRelation.getRelationStatus().equals("0")) {// userId가 relationUserId를 친추한 경우,
 				communityMapper.updateRelation(dbRelation);
-				System.out.println("//////db에 이미 follow 존재, 데이터 상태 변경");
 				return 1;
 			} else if (dbRelation.getRelationStatus().equals("1")) {// userId가 relationUserId를 이미 블락한 경우
-				System.out.println("//////db에 이미 block 존재, 데이터 삽입 x");
 				return -1;
 			}
 		}
 
-		System.out.println("/////db 존재 x, insert block!");
 		return communityMapper.insertRelation(relation);
 	}
 
 	@Override
+	public Map<String, Object> getListBlock(Search search, String userId, String relationStatus) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("search", search);
+		map.put("userId", userId);
+		map.put("relationStatus", relationStatus);
+		
+		map.put("blockList", communityMapper.getListRelation(map));
+		map.put("blockTotalCount", communityMapper.getRelationTotalCount(map));
+		
+		return map;
+	}
+	
+	@Override
 	public int deleteBlock(Relation relation) {
-
 		Relation dbRelation = communityMapper.getRelation(relation);
 
 		return (dbRelation != null & dbRelation.getRelationStatus().equals("1"))
@@ -290,38 +297,7 @@ public class CommunityServiceImpl implements CommunityService {
 	}
 
 	@Override
-	public int postViewsUp(int postNo) {
-		return communityMapper.postViewsUp(postNo);
-	}
-
-	@Override
-	public List<Relation> getAllRelation(String userId) {
-		return communityMapper.getAllRelation(userId);
-	}
-
-	// 신고체크
-	@Override
-	public int checkReport(Report report) {
-		// TODO Auto-generated method stub
-		return communityMapper.checkReport(report);
-	}
-
-	@Override
 	public String checkRelation(Relation relation) {
-		// TODO Auto-generated method stub
 		return communityMapper.checkRelation(relation);
 	}
-
-	@Override
-	public List<Like> checkLikePost(String userId) {
-		// TODO Auto-generated method stub
-		return communityMapper.checkLikePost(userId);
-	}
-
-	@Override
-	public Post getPostAdmin(int postNo) {
-		// TODO Auto-generated method stub
-		return communityMapper.getPostAdmin(postNo);
-	}
-
 }
