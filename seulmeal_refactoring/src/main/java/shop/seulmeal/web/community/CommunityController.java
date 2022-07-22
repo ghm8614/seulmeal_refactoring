@@ -8,10 +8,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpSession;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,8 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import shop.seulmeal.common.Page;
 import shop.seulmeal.common.Search;
@@ -32,7 +28,6 @@ import shop.seulmeal.service.attachments.AttachmentsService;
 import shop.seulmeal.service.community.CommunityService;
 import shop.seulmeal.service.domain.Attachments;
 import shop.seulmeal.service.domain.Comment;
-import shop.seulmeal.service.domain.Like;
 import shop.seulmeal.service.domain.Post;
 import shop.seulmeal.service.domain.Relation;
 import shop.seulmeal.service.domain.Report;
@@ -57,8 +52,7 @@ public class CommunityController {
 	private int pageSize;
 
 	@GetMapping("/")
-	public String communityMain(@RequestParam(required = false) String searchKeyword,
-			@RequestParam(required = false) String searchCondition, Model model, HttpSession session) throws Exception {
+	public String communityMain(@ModelAttribute Search search, Model model, HttpSession session) throws Exception {
 
 		// 비회원 게시판 사용불가
 		User loginUser = (User) session.getAttribute("user");
@@ -67,12 +61,8 @@ public class CommunityController {
 			return "user/login";
 		}
 
-		// 검색조건
-		Search search = new Search();
 		search.setCurrentPage(1);
 		search.setPageSize(pageSize);
-		search.setSearchKeyword(searchKeyword);
-		search.setSearchCondition(searchCondition);
 
 		// 차단유저 게시글 제외한 전체 게시글
 		Map<String, Object> postMap = communityService.getListPost(search, loginUser.getUserId(), null);
@@ -112,7 +102,7 @@ public class CommunityController {
 		model.addAttribute("followMap", followMap);
 		model.addAttribute("followerMap", followerMap);
 		model.addAttribute("blockMap", blockMap);
-		model.addAttribute("search", search);
+		//model.addAttribute("search", search);
 
 		return "community/communityMain";
 	}
