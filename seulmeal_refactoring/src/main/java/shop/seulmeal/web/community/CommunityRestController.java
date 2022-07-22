@@ -166,13 +166,13 @@ public class CommunityRestController {
 
 	@GetMapping("/followings")
 	public List<Relation> getListFollow(@RequestParam(required = false, defaultValue = "1") int currentPage,
-			@RequestParam(required = false) String searchKeyword, HttpSession session) {
+			HttpSession session) {
 
 		Search search = new Search();
 
 		search.setCurrentPage(currentPage);
 		search.setPageSize(pageSize);
-		search.setSearchKeyword(searchKeyword);
+		//search.setSearchKeyword(searchKeyword);
 
 		String loginUserId = ((User) session.getAttribute("user")).getUserId();
 		Map<String, Object> map = communityService.getListFollow(null, loginUserId, "0");// 검색없는 전체목록
@@ -181,14 +181,14 @@ public class CommunityRestController {
 	}
 
 	@GetMapping("/followers")
-	public List<Relation> getListFollower(@RequestParam(required = false, defaultValue = "1") int currentPage,
-			@RequestParam(required = false) String searchKeyword, HttpSession session) {
+	public List<Relation> getListFollower(@RequestParam(required = false, defaultValue = "1") int currentPage, 
+			HttpSession session) {
 
 		Search search = new Search();
 
 		search.setCurrentPage(currentPage);
 		search.setPageSize(pageSize);
-		search.setSearchKeyword(searchKeyword);
+		//search.setSearchKeyword(searchKeyword);
 
 		String relationUserId = ((User) session.getAttribute("user")).getUserId();
 		Map<String, Object> map = communityService.getListFollower(search, relationUserId);
@@ -230,13 +230,13 @@ public class CommunityRestController {
 
 	@GetMapping("/blocks")
 	public List<Relation> getListBlock(@RequestParam(required = false, defaultValue = "1") int currentPage,
-			@RequestParam(required = false) String searchKeyword, HttpSession session) {
+			HttpSession session) {
 
 		Search search = new Search();
 
 		search.setCurrentPage(currentPage);
 		search.setPageSize(pageSize);
-		search.setSearchKeyword(searchKeyword);
+		//search.setSearchKeyword(searchKeyword);
 
 		String userId = ((User) session.getAttribute("user")).getUserId();
 		Map<String, Object> map = communityService.getListBlock(search, userId, "1");
