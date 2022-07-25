@@ -60,6 +60,9 @@ dependencies {
 	//카카오로그인 
 	implementation group: 'com.google.code.gson', name: 'gson', version: '2.7'
 	
+	// swagger (SpringDoc O, Springfox Swagger X)
+	implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.9'
+	
 }
 
 tasks.named('test') {
